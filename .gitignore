@@ -1,3 +1,4 @@
+.dist-buildwrapper
 dist
 cabal-dev
 *.o
