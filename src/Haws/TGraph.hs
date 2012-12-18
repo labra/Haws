@@ -85,6 +85,12 @@ class TGraph gr where
                   Ord b, Show b) => (a -> b) -> gr a -> gr b
    mapTGraph f = gmapTGraph (\ctx -> (mapCtx f ctx))
 
+
+   -- mapTGraph2 is equivalent to mapTGraph (prove it?)
+   mapTGraph2 :: (Ord a, Show a, 
+                  Ord b, Show b) => (a -> b) -> gr a -> gr b
+   mapTGraph2 f = foldTGraph gEmpty (\ctx g -> comp (mapCtx f ctx) g)
+
    -- generalized map
    gmapTGraph :: (Ord a, Show a, 
                   Ord b, Show b) => (TContext a -> TContext b) -> gr a -> gr b
@@ -130,7 +136,17 @@ class TGraph gr where
      Nothing -> Nothing
      Just (ctx,g') -> Just g'
 
+   isEdge :: (Ord a, Show a) => a -> gr a -> Bool
+   isEdge n gr = case decomp n gr of
+        Nothing -> False
+        Just (ctx,_) -> not (null (rels ctx))
 
+
+   isVertex :: (Ord a, Show a) => a -> gr a -> Bool
+   isVertex n gr = case decomp n gr of
+        Nothing -> False
+        Just (ctx,_) -> not (null (succ ctx)) || not (null (pred ctx)) 
+        
 
 -- This definition generates a decoposed graph...not needed
 -- TODO: just remove the following code?

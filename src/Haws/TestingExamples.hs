@@ -104,3 +104,17 @@ emapPairs f g = Data.Set.map (\(x,y) -> (emapNode f g x,emapNode f g y))
 emapNode :: (a -> c) -> (b -> d) -> EValue a b -> EValue c d
 emapNode f g (Node a) = Node (f a)
 emapNode f g (Edge b) = Edge (g b)
+
+-- Examples from paper
+g1 :: FGLTGraph Char
+g1 =   Ctx { node = 'a',pred = fromList [('c','s'),('b','q')], succ = fromList [('p','b')],rels = fromList []} `comp`
+     ( Ctx { node = 'b', pred = fromList [], succ = fromList [('r','c')], rels= fromList [] } `comp`
+     ( Ctx { node = 'c', pred = fromList [], succ = fromList [], rels = fromList [] } `comp`
+     ( Ctx { node = 'p', pred = fromList [], succ = fromList [], rels = fromList [] } `comp`
+     ( Ctx { node = 'q', pred = fromList [], succ = fromList [], rels = fromList [] } `comp`
+     ( Ctx { node = 'r', pred = fromList [], succ = fromList [], rels = fromList [] } `comp`
+     ( Ctx { node = 's', pred = fromList [], succ = fromList [], rels = fromList [] } `comp`
+       gEmpty
+     ))))))
+    
+
