@@ -33,8 +33,9 @@ class TGraph gr where
    -- | 'decompAny' it decomposes a graph taking an arbitrary node (the head of 'nodes'). 
    --  It is similar 'matchAny' in 'Data.Graph.Inductive'
    decompAny :: (Ord a, Show a) => gr a -> Maybe (TContext a, gr a)
-   decompAny g | null (nodes g) = Nothing
-               | otherwise      = decomp (head (elems (nodes g))) g
+   decompAny g | null ns    = Nothing
+               | otherwise  = decomp (head (elems ns)) g
+         where ns = nodes g
                  
    -- | We could have let 'comp' as primitive and define 'insertTriple' in terms of 'comp'  
    comp :: (Ord a, Show a) => TContext a -> gr a -> gr a
@@ -147,6 +148,15 @@ class TGraph gr where
         Nothing -> False
         Just (ctx,_) -> not (null (succ ctx)) || not (null (pred ctx)) 
         
+   gTake :: (Ord a, Show a) => Int -> gr a -> gr a
+   gTake n gr 
+        | n == 0 = gEmpty
+        | n > 0 = case decompAny gr of
+                        Nothing -> error "gTake: Cannot decomp"                
+                        Just (ctx,gr') -> let grec = gTake (n - 1) gr'
+                                          in comp (filterNodes (nodes grec) ctx) (gTake (n - 1) grec)
+        | otherwise = error "gTake: Negative argument" 
+   
 
 -- This definition generates a decoposed graph...not needed
 -- TODO: just remove the following code?

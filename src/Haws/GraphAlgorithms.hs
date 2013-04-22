@@ -58,3 +58,4 @@ mscc g = mdff (mtopsort g) (grev g)
 showTrees :: Show a => [Tree a] -> String
 showTrees ts = concat (Prelude.map (\t -> Data.Tree.drawTree t ++ "\n") 
     (Prelude.map (\t -> Prelude.fmap show t) ts))
+    
