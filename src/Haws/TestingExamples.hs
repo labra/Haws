@@ -3,10 +3,12 @@ module Haws.TestingExamples where
 import Haws.TGraph
 import Haws.GraphAlgorithms
 import Haws.FGLTGraph
+import Haws.FunTGraph
 import Haws.TContext
 import Data.Graph.Inductive
 import Data.Graph.Inductive.Query.DFS
 import Data.Set
+import Data.Maybe
 import Prelude hiding (pred,succ)
 
 b1 :: Gr Char Char
@@ -118,3 +120,15 @@ g1 =   Ctx { node = 'a',pred = fromList [('c','s'),('b','q')], succ = fromList [
      ))))))
     
 
+inf :: Int -> FunTGraph Int
+inf x = 
+      Ctx { node = x, 
+            pred = fromList [] ,
+            succ = fromList [] ,
+            rels = fromList [] } `comp` inf (x + 1)
+            
+takeNnodes :: (Show a, Ord a) => Int -> FunTGraph a -> [a]
+takeNnodes 0 _ = []
+takeNnodes n g = case (decompAny g) of 
+ Nothing     -> []
+ Just (ctx,g') -> node ctx : takeNnodes (n - 1) g'

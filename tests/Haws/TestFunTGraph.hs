@@ -23,10 +23,6 @@ tests = [
 instance (Ord a, Arbitrary a) => Arbitrary (FunTGraph a) where
  arbitrary = undefined
  
--- coArbitrary = undefined
- 
-
-
 test_empty = 
  let e :: FunTGraph Int
      e = gEmpty

@@ -8,7 +8,6 @@ import Data.Set
 import Haws.TContext
 import Haws.Subst
 import Prelude hiding (pred,succ,map,null)
--- import Haws.Unify
 
 class TGraph gr where 
    -- essential operations
@@ -81,7 +80,7 @@ class TGraph gr where
     Nothing -> error "Cannot get context"
     Just (ctx,_) -> ctx
    
-   -- structured preserving map 
+   -- simplified map 
    mapTGraph :: (Ord a, Show a, 
                   Ord b, Show b) => (a -> b) -> gr a -> gr b
    mapTGraph f = gmapTGraph (\ctx -> (mapCtx f ctx))
@@ -158,7 +157,7 @@ class TGraph gr where
         | otherwise = error "gTake: Negative argument" 
    
 
--- This definition generates a decoposed graph...not needed
+-- This definition generates a decomposed graph...not needed
 -- TODO: just remove the following code?
                     
 data DecompTGraph a = EmptyTGraph
@@ -176,3 +175,5 @@ decompTGraph gr =
          in case decomp n gr of
              Just (mctx,gr) -> Extend mctx (decompTGraph gr)
              Nothing -> error ("Not possible to decompose graph from node " ++ show n)
+
+            

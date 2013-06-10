@@ -39,9 +39,14 @@ triplesRDFfrom :: Int -> RDFGraph -> Set (Resource,Resource,Resource)
 triplesRDFfrom _ (Basic g) = triples g
 triplesRDFfrom n (Exists f) = triplesRDFfrom (n + 1) (f n)            
 
+compRDF :: TContext Resource -> RDFGraph -> RDFGraph
+compRDF ctx (Exists f) = Exists (\x -> compRDF ctx (f x))
+compRDF ctx (Basic g) = Basic (comp ctx g)
+
 mergeRDF :: RDFGraph -> RDFGraph -> RDFGraph
 mergeRDF g (Exists f) = Exists (\x -> mergeRDF g (f x))
-mergeRDF g (Basic g1) = insertTriplesRDF (triples g1) g
+mergeRDF g (Basic g1) = foldTGraph g (\ctx g' -> compRDF ctx g') g1
+-- mergeRDF g (Basic g1) = insertTriplesRDF (triples g1) g
 
 containsIRI :: RDFGraph -> Resource -> Bool
 containsIRI (Exists f) iri@(IRI _) = containsIRI (f 0) iri
@@ -59,6 +64,10 @@ foldRDFGraph e h = foldRDFGraphAux e h 0
 
 foldRDFGraphAux e h seed (Basic g)  = foldTGraph e h g 
 foldRDFGraphAux e h seed (Exists f) = foldRDFGraphAux e h (seed + 1) (f seed)
+
+mapRDFGraph::(Resource -> Resource) -> RDFGraph -> RDFGraph
+mapRDFGraph h (Basic g) = Basic (gmapTGraph (mapCtx h) g)
+mapRDFGraph h (Exists f) = Exists (\x -> mapRDFGraph h (f x))
 
 printRDFFolds :: RDFGraph -> String
 printRDFFolds = foldRDFGraphOrd "Empty" (\ctx r -> show ctx ++ "\n" ++ r)

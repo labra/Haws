@@ -17,8 +17,8 @@ data ValueGraph a = Value {
         edges  :: Set.Set (a,a)
  } deriving Show
                 
--- | A graph 'a' is a list of nodes, a real graph 'Gr' of 'Int', 
--- and maps from nodes and edges to those 'Int' values.
+-- | A TGraph maintains a real graph 'Gr' of nodes of type a and edges of type a 
+-- and a map from nodes and the edges that it relates.
 data FGLTGraph a = FGLTGraph {
   graph :: FGL.Gr a a,
   nodeMap :: Map.Map a (ValueGraph a)

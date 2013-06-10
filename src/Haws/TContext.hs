@@ -9,7 +9,7 @@ data TContext a = Ctx {
         pred :: Set (a,a),
         succ :: Set (a,a),
         rels :: Set (a,a) 
-} deriving (Show,Eq)
+} deriving (Show,Eq,Ord)
 
 triplesCtx :: Ord a => TContext a -> Set(a,a,a)
 triplesCtx ctx = 
