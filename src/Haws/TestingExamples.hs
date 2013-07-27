@@ -116,5 +116,21 @@ g1 =   Ctx { node = 'a',pred = fromList [('c','s'),('b','q')], succ = fromList [
      ( Ctx { node = 's', pred = fromList [], succ = fromList [], rels = fromList [] } `comp`
        gEmpty
      ))))))
+     
+
+g2 :: FGLTGraph Char
+g2 =   Ctx { node = 'a',
+             pred = fromList [('c','s'),('b','q')], 
+             succ = fromList [('p','b')],
+             rels = fromList [] 
+           } `comp`
+     ( Ctx { node = 'b', 
+             pred = fromList [], 
+             succ = fromList [('r','c')], 
+             rels= fromList [] 
+            } `comp`
+       gEmpty
+     )
     
+
 
