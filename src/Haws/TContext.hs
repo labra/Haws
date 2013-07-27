@@ -9,7 +9,7 @@ data TContext a = Ctx {
         pred :: Set (a,a),
         succ :: Set (a,a),
         rels :: Set (a,a) 
-} deriving (Show,Eq)
+} deriving (Show,Eq,Ord)
 
 triplesCtx :: Ord a => TContext a -> Set(a,a,a)
 triplesCtx ctx = 
@@ -52,3 +52,11 @@ mapCtx f ctx = ctx { node = f (node ctx),
 
 swapCtx :: Ord a => TContext a -> TContext a
 swapCtx ctx = ctx { pred = succ ctx, succ = pred ctx, rels = map (\(x,y) -> (y,x)) (rels ctx) }
+
+filterNodes :: Ord a => Set a -> TContext a -> TContext a
+filterNodes ns ctx = ctx { succ = filterNodesPairs ns (succ ctx),
+                           pred = filterNodesPairs ns (pred ctx),
+                           rels = filterNodesPairs ns (rels ctx)}
+                           
+filterNodesPairs :: Ord a => Set a -> Set (a,a) -> Set (a,a)
+filterNodesPairs ns ps = filter (\(x,y) -> not (member x ns || member y ns)) ps

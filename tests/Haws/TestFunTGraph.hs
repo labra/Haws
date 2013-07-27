@@ -16,18 +16,13 @@ main = defaultMain tests
 tests = [
         testGroup "Empty FunTGraph" [
                 testCase "empty" test_empty,
-                testCase "empty nodes" test_emptyNodes,
-                testProperty "Empty property" propEmpty
+                testCase "empty nodes" test_emptyNodes
             ]
     ]
 
 instance (Ord a, Arbitrary a) => Arbitrary (FunTGraph a) where
  arbitrary = undefined
  
--- coArbitrary = undefined
- 
-
-
 test_empty = 
  let e :: FunTGraph Int
      e = gEmpty
@@ -38,7 +33,4 @@ test_emptyNodes =
        e = gEmpty
    in (nodes e) @?= Data.Set.empty
 
-propEmpty :: FunTGraph Int -> Property
-propEmpty gr =
-    isEmpty gr ==>
-        nodes gr == Data.Set.empty
+        
