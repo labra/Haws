@@ -107,6 +107,8 @@ insertTripleFGL (x,p,y) gr =
   
 addEdge (x,y) v = v { edges = Set.insert (x,y) (edges v) }
 
+---------------------------------------------
+-- Testing....should remove this...
 
 emptyFGLInt :: FGLTGraph Int
 emptyFGLInt = emptyFGL

@@ -46,7 +46,6 @@ compRDF ctx (Basic g) = Basic (comp ctx g)
 mergeRDF :: RDFGraph -> RDFGraph -> RDFGraph
 mergeRDF g (Exists f) = Exists (\x -> mergeRDF g (f x))
 mergeRDF g (Basic g1) = foldTGraph g (\ctx g' -> compRDF ctx g') g1
--- mergeRDF g (Basic g1) = insertTriplesRDF (triples g1) g
 
 containsIRI :: RDFGraph -> Resource -> Bool
 containsIRI (Exists f) iri@(IRI _) = containsIRI (f 0) iri
@@ -60,10 +59,10 @@ foldRDFGraphOrdAux e h seed (Basic g) = foldTGraphOrd e h g
 foldRDFGraphOrdAux e h seed (Exists f)= foldRDFGraphOrdAux e h (seed + 1) (f seed)
 
 foldRDFGraph :: a -> (TContext Resource -> a -> a) -> RDFGraph -> a
-foldRDFGraph e h = foldRDFGraphAux e h 0
-
-foldRDFGraphAux e h seed (Basic g)  = foldTGraph e h g 
-foldRDFGraphAux e h seed (Exists f) = foldRDFGraphAux e h (seed + 1) (f seed)
+foldRDFGraph e h = foldRDFGraph' e h 0
+ where 
+  foldRDFGraph' e h s (Basic g)  = foldTGraph e h g 
+  foldRDFGraph' e h s (Exists f) = foldRDFGrap' e h (s + 1) (f seed)
 
 mapRDFGraph::(Resource -> Resource) -> RDFGraph -> RDFGraph
 mapRDFGraph h (Basic g) = Basic (gmapTGraph (mapCtx h) g)
