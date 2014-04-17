@@ -62,7 +62,7 @@ foldRDFGraph :: a -> (TContext Resource -> a -> a) -> RDFGraph -> a
 foldRDFGraph e h = foldRDFGraph' e h 0
  where 
   foldRDFGraph' e h s (Basic g)  = foldTGraph e h g 
-  foldRDFGraph' e h s (Exists f) = foldRDFGrap' e h (s + 1) (f seed)
+  foldRDFGraph' e h s (Exists f) = foldRDFGraph' e h (s + 1) (f s)
 
 mapRDFGraph::(Resource -> Resource) -> RDFGraph -> RDFGraph
 mapRDFGraph h (Basic g) = Basic (gmapTGraph (mapCtx h) g)
