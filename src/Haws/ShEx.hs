@@ -80,7 +80,7 @@ data ValueClass = ValueType { v :: IRI }
                 | ValueSet  { set :: Set [IRI] } 
                 | ValueWild  { any ::Set[IRI] }
                 | ValueStem { stem:: IRI }
-                | ValueReference { label::Label }
+                | ValueReference { ref :: Label }
  deriving (Show, Eq)
                 
 data Unbound = Unbound
@@ -128,10 +128,23 @@ arc1 = ArcRule (NameTerm (IRI ":name"))
                (defaultCard)
                (noActions) 
 
-type Typing = IRI -> IRI
+
+-- Results 
+data ShapeAsignment = CanBe [IRI]
+                    | CannotBe [IRI]
+ 
+data Typing = Map IRI ShapeAsignment
+
+data Context = Context { 
+   graph :: RDFGraph ,
+   typing :: Typing
+ }
 
 -- Semantics of ShEx
 
-validate :: ShEx -> RDFGraph -> Typing
-validate shex graph = undefined
+validateShEx :: ShEx -> RDFGraph -> Context -> [Typing]
+validateShEx shex graph ctx = undefined
+
+validateIRI :: ShEx -> IRI -> Context -> [Typing]
+validateIRI shex iri ctx = undefined
 
