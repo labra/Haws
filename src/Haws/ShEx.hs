@@ -65,9 +65,10 @@ data ShEx = ShEx { rules :: [Shape]
                  }                   
 
 -- Rules
-data Rule = OrRule Rule Rule
-          | AndRule Rule Rule
-          | ArcRule NameClass ValueClass Card Actions
+data Rule = Or Rule Rule
+          | And Rule Rule
+          | Group Rule Card Actions
+          | Arc NameClass ValueClass Card Actions
           | EmptyRule
  deriving (Show,Eq)
  
@@ -93,6 +94,9 @@ data Card = Card { minCard:: Int, maxCard :: Either Int Unbound }
  
 defaultCard :: Card
 defaultCard = Card { minCard = 1, maxCard = Left 1 }
+
+optionalCard :: Card
+optionalCard = Card { minCard = 0, maxCard = Left 1 }
 
 star :: Card
 star = Card { minCard = 0, maxCard = Right Unbound }
@@ -122,11 +126,6 @@ noActions = Actions []
 resource :: String -> RDFNode
 resource str = Left (IRI str)
 
-arc1 :: Rule
-arc1 = ArcRule (NameTerm (IRI ":name"))
-               (ValueType (IRI "xsd:string"))
-               (defaultCard)
-               (noActions) 
 
 
 -- Results 
@@ -148,3 +147,131 @@ validateShEx shex graph ctx = undefined
 validateIRI :: ShEx -> IRI -> Context -> [Typing]
 validateIRI shex iri ctx = undefined
 
+
+--------------------------------------------
+---- Examples
+
+{- Employee
+
+<EmployeeShape> {
+  foaf:name xsd:string
+, foaf:mbox xsd:string
+} 
+-}
+
+
+employeeShape :: Shape
+employeeShape = 
+ Shape {
+   label = mkLabel("employee"),
+   rule = And
+     (Arc (NameTerm (IRI "name"))
+          (ValueType (IRI "xsd:string"))
+          (defaultCard)
+          (noActions))
+     (Arc (NameTerm (IRI "mbox"))
+          (ValueType (IRI "xsd:string"))
+          (defaultCard)
+          (noActions))
+   }
+ 
+{- User
+
+<UserShape> {
+ ( foaf:name xsd:string
+ | ( foaf:givenName  xsd:string+
+   , foaf:familyName xsd:string
+   )
+ )
+ , foaf:mbox xsd:string
+}
+
+-}
+
+
+userShape :: Shape
+userShape = 
+ Shape {
+   label = mkLabel("user"),
+   rule = 
+    And
+     (Or 
+       (Arc (NameTerm (IRI "name"))
+            (ValueType (IRI "xsd:string"))
+            (defaultCard)
+            (noActions)
+       )
+       (And
+          (Arc (NameTerm (IRI "givenName"))
+               (ValueType (IRI "xsd:string"))
+               (star)
+               (noActions)
+          )
+          (Arc (NameTerm (IRI "familyName"))
+               (ValueType (IRI "xsd:string"))
+               (defaultCard)
+               (noActions)
+          )
+       )
+     )
+     ( Arc (NameTerm (IRI "mbox"))
+           (ValueType (IRI "xsd:string"))
+           (defaultCard)
+           (noActions)
+     )
+ }
+
+
+{- Issue shapes
+
+<IssueShape> {
+   ex:state (ex:unassigned ex:assigned)
+ , ex:reportedBy @<UserShape>
+ , ex:reportedOn xsd:dateTime
+ , ( ex:reproducedBy @<EmployeeShape>
+   , ex:reproducedOn xsd:dateTime      
+   )?
+ , ex:related @<IssueShape>*
+}
+
+-}
+
+
+issueShape :: Shape
+issueShape = 
+ Shape {
+   label = mkLabel("issue"),
+   rule = 
+    And
+     (Arc (NameTerm (IRI "state"))
+          (ValueType (IRI "assigned"))
+          (defaultCard)
+          (noActions))
+     (And 
+       (Arc (NameTerm (IRI "reportedBy"))
+            (ValueReference (mkLabel "userShape"))
+            (defaultCard)
+            (noActions)
+       )
+       (Group (And 
+                (Arc (NameTerm (IRI "reproducedBy"))
+                    (ValueReference (mkLabel "employeeShape"))
+                    (defaultCard)
+                    (noActions)
+                )
+                (Arc (NameTerm (IRI "reproducedOn"))
+                    (ValueType (IRI "xsd:string"))
+                    (defaultCard)
+                    (noActions)
+                )
+              ) 
+              optionalCard
+              noActions
+       ) -- Group
+     ) -- And
+  }
+
+schema :: ShEx
+schema = ShEx { rules = [employeeShape, userShape, issueShape]
+              , start = Nothing
+              } 
