@@ -54,6 +54,15 @@ data Label = Label IRI
 mkLabel :: String -> Label
 mkLabel str = Label (IRI str)
 
+-- Shapes
+
+data Shape = Shape { label:: Label
+                   , rule :: Rule
+                   }
+                   
+data ShEx = ShEx { rules :: [Shape]
+                 , start :: Maybe [Label]
+                 }                   
 
 -- Rules
 data Rule = OrRule Rule Rule
@@ -118,3 +127,11 @@ arc1 = ArcRule (NameTerm (IRI ":name"))
                (ValueType (IRI "xsd:string"))
                (defaultCard)
                (noActions) 
+
+type Typing = IRI -> IRI
+
+-- Semantics of ShEx
+
+validate :: ShEx -> RDFGraph -> Typing
+validate shex graph = undefined
+
