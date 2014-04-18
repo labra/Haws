@@ -137,12 +137,9 @@ schema = ShEx { rules = [employeeShape, userShape, issueShape]
 empty :: RDFGraph 
 empty = RDFGraph []              
      
-s :: String -> Object
-s str = strLiteral str      
-  
 issue1 :: [RDFTriple]
 issue1 = 
- [ tripleIRIs ("issue1","state",s "assigned")
+ [ tripleIRIs ("issue1","state","assigned")
  , tripleIRIs ("issue1","reportedBy","john")
  , tripleIRIs ("john","name","john") 
  ]

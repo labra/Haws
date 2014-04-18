@@ -14,8 +14,11 @@
 
 module Haws.ShEx.Shape where
 
-import Data.Set
+import qualified Data.Set as Set
+import qualified Data.Map as Map
+import qualified Test.HUnit as Test
 import Haws.ShEx.RDFModel
+import Haws.ShEx.Typing
 
 ---------------------
 -- ShEx model
@@ -47,14 +50,14 @@ data Rule = Or Rule Rule
  deriving (Show,Eq)
  
 data NameClass = NameTerm { term :: IRI }
-               | NameWild  { excl :: Set [IRI] }
-               | NameStem { stem :: IRI }
+               | NameWild  { excl :: Set.Set [IRI] }
+               | NameStem IRI
  deriving (Show, Eq)
 
 data ValueClass = ValueType { v :: IRI }
-                | ValueSet  { set :: Set [IRI] } 
-                | ValueWild  { any ::Set[IRI] }
-                | ValueStem { stem:: IRI }
+                | ValueSet  { set ::  Set.Set [IRI] } 
+                | ValueWild  { any :: Set.Set[IRI] }
+                | ValueStem IRI 
                 | ValueReference { ref :: Label }
  deriving (Show, Eq)
                 
@@ -95,11 +98,7 @@ data Actions = Actions [Action]
 noActions :: Actions
 noActions = Actions []
 
--- Results 
-data ShapeAsignment = CanBe [IRI]
-                    | CannotBe [IRI]
- 
-data Typing = Map IRI ShapeAsignment
+----
 
 data Context = Context { 
    graph :: RDFGraph ,
@@ -114,4 +113,21 @@ validateShEx shex graph ctx = undefined
 validateIRI :: ShEx -> IRI -> Context -> [Typing]
 validateIRI shex iri ctx = undefined
 
+{-
+matchShapeNode :: Monad m => 
+        Shape -> IRI -> Context -> m [Typing]
+matchShapeNode shape node ctx =
+ do 
+  typings <- matchRuleNode (rule shape) node ctx
+ in map (\t -> addTyping (iri (label shape)) node t)     
+-}
 
+{-
+matchRuleNode :: Monad m => 
+        Rule -> IRI -> Context -> m [Typing]
+matchRuleNode (Arc n v c actions) node ctx =
+ if matchNameClass n node then 
+  
+ else return []
+ 
+-}
