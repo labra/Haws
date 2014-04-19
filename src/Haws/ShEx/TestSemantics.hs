@@ -38,6 +38,14 @@ raqbq = And (optional (Arc (nameIRI "a") (ValueType xsd_string) noActions))
 raqbp :: Rule
 raqbp = And (optional (Arc (nameIRI "a") (ValueType xsd_string) noActions))
             (OneOrMore (Arc (nameIRI "b") (ValueType xsd_string) noActions))
+
+-- (ab)?c+
+r_ab_qcp :: Rule
+r_ab_qcp = And 
+            (optional 
+              (And (Arc (nameIRI "a") (ValueType xsd_string) noActions)
+                   (Arc (nameIRI "b") (ValueType xsd_string) noActions)))
+		    (OneOrMore (Arc (nameIRI "c") (ValueType xsd_string) noActions))
 			
 -- Some instances		  
 		
@@ -64,9 +72,27 @@ ib = Set.fromList
       [ tripleStr ("x","b","_")
       ]
 
+ic :: Set RDFTriple
+ic = Set.fromList [ tripleStr ("x","c","_") ]
+
 i0 :: Set RDFTriple
 i0 = Set.fromList []
+
+iabc :: Set RDFTriple
+iabc = Set.fromList 
+      [ tripleStr ("x","a","_")
+	  , tripleStr ("x","b","_")
+	  , tripleStr ("x","c","_")
+      ]
 	  
+iabcc :: Set RDFTriple
+iabcc = Set.fromList 
+      [ tripleStr ("x","a","_")
+	  , tripleStr ("x","b","_")
+	  , tripleStr ("x","c","1")
+	  , tripleStr ("x","c","2")
+      ]
+
 test_iab_rab = Test.TestCase $ Test.assertEqual 
   "iab against rab"
   ( pass ) 
@@ -179,10 +205,54 @@ test_iabb_raqbp = Test.TestCase $ Test.assertEqual
   "abb against a?b+"
   ( pass ) 
   ( matchRule ctx iab raqbp ) 
+
+-- r_ab_qcp (ab)?c+
+
+test_iab_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "ab against (ab)?c+"
+  ( failure ) 
+  ( matchRule ctx iab r_ab_qcp ) 
+
+test_i0_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "() against (ab)?c+"
+  ( failure ) 
+  ( matchRule ctx i0 r_ab_qcp ) 
+
+test_ib_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "b against (ab)?c+"
+  ( failure ) 
+  ( matchRule ctx ib r_ab_qcp ) 
+
+test_ia_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "a against (ab)?c+"
+  ( failure ) 
+  ( matchRule ctx ia r_ab_qcp ) 
+
+test_iabb_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "abb against (ab)?c+"
+  ( failure ) 
+  ( matchRule ctx iab r_ab_qcp ) 
+
+test_ic_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "c against (ab)?c+"
+  ( pass ) 
+  ( matchRule ctx ic r_ab_qcp ) 
+
+test_iabc_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "abc against (ab)?c+"
+  ( pass ) 
+  ( matchRule ctx iabc r_ab_qcp ) 
   
+test_iabcc_r_ab_qcp = Test.TestCase $ Test.assertEqual 
+  "abcc against (ab)?c+"
+  ( pass2 ) 
+  ( matchRule ctx iabcc r_ab_qcp ) 
+
 pass :: Result Bool
 pass = return True
 
+pass2 :: Result Bool
+pass2 = R { rs = [True,True] }
 
 ctx = Context { 
  graph  = RDFGraph (Set.fromList []),
@@ -213,6 +283,14 @@ tests = Test.TestList
  , test_ib_raqbp
  , test_i0_raqbp
  , test_iabb_raqbp
+ , test_iab_r_ab_qcp
+ , test_ia_r_ab_qcp
+ , test_ib_r_ab_qcp
+ , test_i0_r_ab_qcp
+ , test_iabb_r_ab_qcp
+ , test_ic_r_ab_qcp
+ , test_iabc_r_ab_qcp
+ , test_iabcc_r_ab_qcp
  ]
 
 main = Test.runTestTT tests
