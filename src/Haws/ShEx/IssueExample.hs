@@ -22,11 +22,9 @@ employeeShape =
    rule = And
      (Arc (NameTerm (IRI "name"))
           (ValueType xsd_string)
-          (defaultCard)
           (noActions))
      (Arc (NameTerm (IRI "mbox"))
           (ValueType xsd_string)
-          (defaultCard)
           (noActions))
    }
  
@@ -53,25 +51,22 @@ userShape =
      (Or 
        (Arc (NameTerm (IRI "name"))
             (ValueType xsd_string)
-            (defaultCard)
             (noActions)
        )
        (And
-          (Arc (NameTerm (IRI "givenName"))
-               (ValueType xsd_string)
-               (star)
-               (noActions)
+          (star (Arc (NameTerm (IRI "givenName"))
+                (ValueType xsd_string)
+                (noActions)
+                )
           )
           (Arc (NameTerm (IRI "familyName"))
                (ValueType xsd_string)
-               (defaultCard)
                (noActions)
           )
        )
      )
      ( Arc (NameTerm (IRI "mbox"))
            (ValueType xsd_string)
-           (defaultCard)
            (noActions)
      )
  }
@@ -100,29 +95,24 @@ issueShape =
     And
      (Arc (NameTerm (IRI "state"))
           (ValueType (IRI "assigned"))
-          (defaultCard)
           (noActions))
      (And 
        (Arc (NameTerm (IRI "reportedBy"))
             (ValueReference (mkLabel "userShape"))
-            (defaultCard)
             (noActions)
        )
-       (Group (And 
+       (opt (And 
                 (Arc (NameTerm (IRI "reproducedBy"))
                     (ValueReference (mkLabel "employeeShape"))
-                    (defaultCard)
                     (noActions)
                 )
                 (Arc (NameTerm (IRI "reproducedOn"))
                     (ValueType xsd_string)
-                    (defaultCard)
                     (noActions)
                 )
-              ) 
-              optionalCard
-              noActions
-       ) -- Group
+            ) 
+            
+       ) -- opt
      ) -- And
   }
 

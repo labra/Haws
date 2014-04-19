@@ -14,11 +14,14 @@
 
 module Haws.ShEx.Shape where
 
+import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Map as Map
+import Data.List(permutations)
 import qualified Test.HUnit as Test
 import Haws.ShEx.RDFModel
 import Haws.ShEx.Typing
+import Haws.Monads.BackMonad
 
 ---------------------
 -- ShEx model
@@ -44,27 +47,33 @@ data ShEx = ShEx { rules :: [Shape]
 -- Rules
 data Rule = Or Rule Rule
           | And Rule Rule
-          | Group Rule Card Actions
-          | Arc NameClass ValueClass Card Actions
+     --   | Group Rule Card Actions
+          | OneOrMore Rule
+          | Arc NameClass ValueClass Actions
           | EmptyRule
  deriving (Show,Eq)
  
-data NameClass = NameTerm { term :: IRI }
-               | NameWild  { excl :: Set.Set [IRI] }
+data NameClass = NameTerm IRI 
+               | NameWild (Set [IRI])
                | NameStem IRI
  deriving (Show, Eq)
 
-data ValueClass = ValueType { v :: IRI }
-                | ValueSet  { set ::  Set.Set [IRI] } 
-                | ValueWild  { any :: Set.Set[IRI] }
+
+data ValueClass = ValueType IRI 
+                | ValueSet  (Set Object)  -- TODO: check with specification 
+                | ValueWild (Set [IRI])
                 | ValueStem IRI 
-                | ValueReference { ref :: Label }
+                | ValueReference Label 
  deriving (Show, Eq)
                 
 data Unbound = Unbound
  deriving (Show,Eq)
 
+-- Some utility functions 
+nameIRI :: String -> NameClass
+nameIRI str = NameTerm (IRI str) 
 
+{-
 -- Cardinalities
 data Card = Card { minCard:: Int, maxCard :: Either Int Unbound }
  deriving (Show, Eq)
@@ -85,7 +94,7 @@ card :: (Int,Int) -> Card
 card (m,n)  
  | m <= n    = Card { minCard = m, maxCard = Left n}
  | otherwise = error ("card: m > n where m = " ++ show m ++ ", n = " ++ show n) 
-
+-}
 -----------------
 -- Actions
  
@@ -99,35 +108,11 @@ noActions :: Actions
 noActions = Actions []
 
 ----
+star :: Rule -> Rule
+star r = Or (OneOrMore r) EmptyRule
 
-data Context = Context { 
-   graph :: RDFGraph ,
-   typing :: Typing
- }
-
--- Semantics of ShEx
-
-validateShEx :: ShEx -> RDFGraph -> Context -> [Typing]
-validateShEx shex graph ctx = undefined
-
-validateIRI :: ShEx -> IRI -> Context -> [Typing]
-validateIRI shex iri ctx = undefined
-
-{-
-matchShapeNode :: Monad m => 
-        Shape -> IRI -> Context -> m [Typing]
-matchShapeNode shape node ctx =
- do 
-  typings <- matchRuleNode (rule shape) node ctx
- in map (\t -> addTyping (iri (label shape)) node t)     
--}
-
-{-
-matchRuleNode :: Monad m => 
-        Rule -> IRI -> Context -> m [Typing]
-matchRuleNode (Arc n v c actions) node ctx =
- if matchNameClass n node then 
+optional :: Rule -> Rule
+optional r = Or r EmptyRule
   
- else return []
+  
  
--}

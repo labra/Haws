@@ -29,7 +29,6 @@ data Types a = Types {
 emptyTypes :: Types a
 emptyTypes = Types { hasTypes = Set.empty, forbidden = Set.empty }
 
-
 singleType :: a -> Types a
 singleType t = Types { hasTypes = Set.singleton t, forbidden = Set.empty }
 
@@ -58,7 +57,8 @@ addType node iri typing =
                   newType <- addHasType iri types
                   return (Map.adjust (\t -> newType) node typing)   
                     
- 
+combineTypings :: Typing -> Typing -> Typing
+combineTypings = undefined
 -------------------------------------------------------
 -- Unit tests
 

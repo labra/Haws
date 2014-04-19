@@ -1,7 +1,13 @@
 module Haws.ShEx.RDFModel where
 
-data RDFGraph = RDFGraph [RDFTriple]
+import Data.Set(Set)
+import qualified Data.Set as Set
+
+data RDFGraph = RDFGraph (Set RDFTriple)
  deriving Show
+ 
+emptyRDFGraph :: RDFGraph
+emptyRDFGraph = RDFGraph (Set.fromList [])
 
 data RDFTriple = RDFTriple { 
         subject   :: Subject, 
@@ -26,14 +32,28 @@ tripleIRIs (s,p,o) = RDFTriple {
   object = ObjIRI (IRI o)
 } 
 
+tripleStr :: (String,String,String) -> RDFTriple
+tripleStr (s,p,o) = RDFTriple {
+ subject   = SubjIRI (IRI s),
+ predicate = IRI p,
+ object    = ObjLiteral (strLiteral o)
+}
+
 data BNode = BNode Int
  deriving (Show,Eq,Ord)
               
 data IRI     = IRI String
  deriving (Show, Eq, Ord)
 
-data Literal = DataTypeLiteral { lexicalForm::String, datatype:: IRI }
-             | LangLiteral { str:: String, lang::String }
+data Literal = 
+         DataTypeLiteral { 
+          lexicalForm :: String, 
+          datatype:: IRI 
+         }
+       | LangLiteral { 
+          str:: String, 
+          lang::String 
+         }
  deriving (Show,Eq,Ord)             
 
 xsd :: String
@@ -45,12 +65,19 @@ xsd_string = IRI (xsd ++ "string")
 strLiteral :: String -> Literal
 strLiteral str = DataTypeLiteral str xsd_string
 
+datatypeLiteral :: Literal -> IRI
+datatypeLiteral (DataTypeLiteral _ d) = d
+datatypeLiteral (LangLiteral _ _)     = xsd_string
+ 
+datatypeObject :: Object -> Maybe IRI
+datatypeObject (ObjLiteral l) = Just (datatypeLiteral l)
+datatypeObject _              =   Nothing
 
 arcs :: IRI -> RDFGraph -> [(IRI, Object)]
 arcs iri (RDFGraph triples) = 
    map(\t -> (predicate t, object t)) 
  ( filter(\t -> hasSubject t iri) 
-   triples
+ ( Set.toList (triples))
  )
  
 hasSubject :: RDFTriple -> IRI -> Bool
