@@ -35,6 +35,8 @@ data Label = Label IRI
 mkLabel :: String -> Label
 mkLabel str = Label (IRI str)
 
+iriFromLabel :: Label -> IRI
+iriFromLabel (Label iri) = iri
 -- Shapes
 
 data Shape = Shape { label:: Label

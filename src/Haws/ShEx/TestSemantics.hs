@@ -309,13 +309,6 @@ test_y_l2_rl1l2 = Test.TestCase $ Test.assertBool
 
 ----------------------------------------------------  
 
-pass :: Result Bool
-pass = return True
-
-pass2 :: Result Bool
-pass2 = Passed [True,True]
-
-
 
 ctx = Context { 
  graph  = RDFGraph (Set.fromList []),

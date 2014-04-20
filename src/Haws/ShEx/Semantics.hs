@@ -19,20 +19,22 @@ import Haws.Monads.BackMonad
 validateShEx :: ShEx -> RDFGraph -> Context -> Result Typing
 validateShEx shex graph ctx = undefined
 
-matchIRI :: Context -> IRI -> Shape -> Result Bool
+matchIRI :: Context -> IRI -> Shape -> Result Typing
 matchIRI ctx iri shape = 
  do
   let triples = arcs iri (graph ctx)
   matchRule ctx triples (rule shape)
+  t <- addType iri (iriFromLabel (label shape)) (typing ctx)
+  return t
   
 -- Match rule
-matchRule :: Context -> Set RDFTriple -> Rule -> Result Bool
+matchRule :: Context -> Set RDFTriple -> Rule -> Result Typing
 matchRule ctx g (And r1 r2) =
  do
   (g1,g2) <- parts g 
-  matchRule ctx g1 r1
-  matchRule ctx g2 r2
-  return True
+  t1 <- matchRule ctx g1 r1
+  t2 <- matchRule ctx g2 r2
+  return (combineTypings t1 t2)
   
 matchRule ctx g (Or r1 r2) =
  matchRule ctx g r1 `orelse` 
@@ -42,11 +44,13 @@ matchRule ctx g rule@(OneOrMore r) =
  matchRule ctx g r `orelse`
  do
   (g1,g2) <- parts g
-  matchRule ctx g1 r
-  matchRule ctx g2 rule 
+  t1 <- matchRule ctx g1 r
+  t2 <- matchRule ctx g2 rule 
+  return (combineTypings t1 t2)
 
 matchRule ctx g EmptyRule =
- if (Set.null g) then return True
+ if (Set.null g) 
+  then return (emptyTyping)
  else failure ("EmptyRule: graph non empty")
  
 matchRule ctx g (Arc n v _) =
@@ -70,17 +74,17 @@ matchName ctx pred (NameStem stem) =
  undefined
  
 
-matchValue :: Context -> Object -> ValueClass -> Result Bool
+matchValue :: Context -> Object -> ValueClass -> Result Typing
 matchValue ctx obj (ValueType t) = 
  case datatypeObject obj of
-  Just d  -> if d == t then return True
+  Just d  -> if d == t then return emptyTyping
              else failure ("matchValue: " ++ show obj ++ " has type " ++ show d ++ " and must be " ++ show t)
   Nothing -> 
    failure ("matchValue: " ++ show obj ++ " has no type " ++ show t)
   
 matchValue ctx obj (ValueSet set) = 
   if Set.member obj set  
-  then return True
+  then return emptyTyping
   else 
    failure ("matchValue: " ++ show obj ++ " does not belong to " ++ show set)
      

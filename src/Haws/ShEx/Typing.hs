@@ -14,7 +14,9 @@
 
 module Haws.ShEx.Typing where
 
+import Data.Set(Set)
 import qualified Data.Set as Set
+import Data.Map(Map)
 import qualified Data.Map as Map
 import Haws.ShEx.RDFModel
 import qualified Test.HUnit as Test
@@ -58,7 +60,7 @@ addType node iri typing =
                   return (Map.adjust (\t -> newType) node typing)   
                     
 combineTypings :: Typing -> Typing -> Typing
-combineTypings = undefined
+combineTypings t1 t2 = Map.union t1 t2
 -------------------------------------------------------
 -- Unit tests
 
