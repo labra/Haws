@@ -40,11 +40,13 @@ mkLabel str = Label (IRI str)
 data Shape = Shape { label:: Label
                    , rule :: Rule
                    }
+	deriving (Show)
                    
 				   
 data ShEx = ShEx { shapes :: [Shape] 
                  , start  :: Maybe [Label]
-                 }                   
+                 } 
+    deriving (Show)
 -- TODO: Implement ShEx as maps from Labels to Rules
 
 findShape :: Label -> ShEx -> Maybe Shape

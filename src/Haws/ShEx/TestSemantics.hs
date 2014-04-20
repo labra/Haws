@@ -277,7 +277,7 @@ shapel2 =
 
 g1 = RDFGraph $ Set.fromList [
   tripleStr ("x","a","_"),
-  tripleStr ("x","b","y"),
+  tripleIRIs ("x","b","y"),
   tripleStr ("y","c","_")
  ]
 
