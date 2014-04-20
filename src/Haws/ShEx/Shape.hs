@@ -16,8 +16,9 @@ module Haws.ShEx.Shape where
 
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.List(permutations)
+import Data.List(permutations,find)
 import qualified Test.HUnit as Test
 import Haws.ShEx.RDFModel
 import Haws.ShEx.Typing
@@ -40,9 +41,15 @@ data Shape = Shape { label:: Label
                    , rule :: Rule
                    }
                    
-data ShEx = ShEx { rules :: [Shape]
-                 , start :: Maybe [Label]
+				   
+data ShEx = ShEx { shapes :: [Shape] 
+                 , start  :: Maybe [Label]
                  }                   
+-- TODO: Implement ShEx as maps from Labels to Rules
+
+findShape :: Label -> ShEx -> Maybe Shape
+findShape lbl shEx = 
+ find (\shape -> (label shape == lbl)) (shapes shEx)
 
 -- Rules
 data Rule = Or Rule Rule

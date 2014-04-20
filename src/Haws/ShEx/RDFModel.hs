@@ -73,12 +73,17 @@ datatypeObject :: Object -> Maybe IRI
 datatypeObject (ObjLiteral l) = Just (datatypeLiteral l)
 datatypeObject _              =   Nothing
 
-arcs :: IRI -> RDFGraph -> [(IRI, Object)]
+iriObject :: Object -> Maybe IRI
+iriObject (ObjIRI iri) = Just iri
+iriObject _ 		   = Nothing
+
+
+arcs :: IRI -> RDFGraph -> Set RDFTriple
 arcs iri (RDFGraph triples) = 
-   map(\t -> (predicate t, object t)) 
- ( filter(\t -> hasSubject t iri) 
- ( Set.toList (triples))
- )
+    Set.fromList 
+  $ filter(\t -> hasSubject t iri) 
+  $ Set.toList (triples)
+ 
  
 hasSubject :: RDFTriple -> IRI -> Bool
 hasSubject t iri = equalsSubject (subject t) iri

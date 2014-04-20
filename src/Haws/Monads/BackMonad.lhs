@@ -12,19 +12,13 @@ module Haws.Monads.BackMonad where
 \begin{code}
 
 class Monad m => BackMonad m where
-   failure :: m a
+   failure :: String -> m a
    orelse  :: m a -> m a -> m a
 
 guard ::(BackMonad m
         ) => Bool -> m ()
 guard b = if b then return ()
-          else failure
+          else failure "guard failed"
 
 \end{code}
 
-Lists can be defined as a backtracking monad
-
-\begin{code}
-
-
-\end{code}
