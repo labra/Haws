@@ -3,6 +3,9 @@ haws
 
 Haskell Web Semantics Library
 
-A proof-of-concept Haskell implementation of RDF using inductive graphs.
+This project contains:
+
+- A proof-of-concept Haskell implementation of RDF using inductive graphs.
+- An RDF validation tool using [ShEx](http://www.w3.org/2013/ShEx/) 
 
 Author: Jose Emilio Labra Gayo
