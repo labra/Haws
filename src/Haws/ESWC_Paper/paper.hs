@@ -53,3 +53,32 @@ rse2 :: RSE
 rse2 = And (Arc (set [":a"]) (set ["1"]))
            (Star (Arc (set [":b"]) (set ["1","2"])))
 		   
+nullable :: RSE -> Bool
+nullable (Fail s) = False
+nullable (Empty)  = True
+nullable (Arc _ _) = False
+nullable (Star e) = True
+nullable (And e1 e2) = nullable e1 && nullable e2
+nullable (Or e1 e2) = nullable e1 || nullable e2
+
+deriv :: RSE -> Triple -> RSE
+deriv f@(Fail s) _ = f
+deriv (Empty) t = Fail "Deriv of empty expression"
+deriv (Arc vp vo) (s,p,o) = 
+   if Set.member p vp && Set.member o vo then Empty
+   else Fail ("Does not match " ++ p ++ " with " ++ show vp ++ " and " ++ o ++ " with " ++ show vo)
+deriv (Star e) t = And (deriv e t) (Star e)
+deriv (And e1 e2) t = Or (And (deriv e1 t) e2)
+                         (And (deriv e2 t) e2)
+deriv (Or e1 e2) t = Or (deriv e1 t) (deriv e2 t)
+                       
+type Graph = [Triple]
+
+match :: RSE -> Graph -> Bool
+match e (t:ts) = match (deriv e t) ts
+match e []     = nullable e
+
+g1 = [("n",":a","1"),("n",":b","1"),("n",":b","2")]
+
+test1 = match rse2 g1
+
