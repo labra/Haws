@@ -69,7 +69,7 @@ deriv (Arc vp vo) (s,p,o) =
    else Fail ("Does not match " ++ p ++ " with " ++ show vp ++ " and " ++ o ++ " with " ++ show vo)
 deriv (Star e) t = And (deriv e t) (Star e)
 deriv (And e1 e2) t = Or (And (deriv e1 t) e2)
-                         (And (deriv e2 t) e2)
+                         (And (deriv e2 t) e1)
 deriv (Or e1 e2) t = Or (deriv e1 t) (deriv e2 t)
                        
 type Graph = [Triple]
