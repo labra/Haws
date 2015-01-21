@@ -15,57 +15,111 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>Haws</h1>
-        <p>Haskell Web Semantics Library</p>
-
-        <p class="view"><a href="https://github.com/labra/haws">View the Project on GitHub <small>labra/haws</small></a></p>
-
-
-        <ul>
-          <li><a href="https://github.com/labra/haws/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/labra/haws/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/labra/haws">View On <strong>GitHub</strong></a></li>
-        </ul>
+        <h1>HAWS</h1>
+	    <p>(HA)skell (W)eb (S)emantics workbench</p>
+        <p class="view"><a href="https://github.com/labra/Haws">View the Project on GitHub</a></p>
       </header>
-      <section>
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+<section>
+<h2>About</h2>
+<p>HAWS contains a set of libraries and code related with some semantic web projects that I am working on</p>
+<p>The code is not production-ready and is mostly proof-of-concept</p>
+<p>The source code contains:</p>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<ul>
+<li>A purely declarative representation of RDF Graphs using Inductive Triple Graphs</li>
+<li>Operational semantics of Shape Expressions using a direct translation of the inference rules 
+		    and a backtracking monad</li>
+<li>Derivatives implementation of Regular Shape Expressions</li>
+<li>
+</ul>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<p>Notice that the implementation of both Shape Expressions and Inductive RDF graphs don't contain 
+   a parser yet. </p>
+<p>By now, the only way to play with them is by declaring the triples/shapes by hand.</p>
+<p>See <a href="https://github.com/labra/Haws/issues">pending issues</a></p>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<h2 id="links">Tutorials and publications</h2>
+<ul>
+<li>
+<i><a href="http://www.w3.org/2014/Talks/1209-shex-egp">ShEx by Example</a></i>,
+<a href="http://www.w3.org/People/Eric/">Eric Prud'hommeaux</a>, 
+<a href="http://www.di.uniovi.es/~labra">Jose Emilio Labra Gayo</a>
+<a href="http://www.swat4ls.org/">SWAT4LS: Semantic Web Applications and Tools for Life Sciences</a>, 
+Dec, 2014, Berlin, Germany, 
+<a href="http://www.w3.org/2014/Talks/1209-shex-egp">Slides</a>
+</li>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<li>
+<i>Shape Expressions: An RDF validation and transformation language</i>,
+<a href="http://www.w3.org/People/Eric/">Eric Prud'hommeaux</a>, 
+<a href="http://www.di.uniovi.es/~labra">Jose Emilio Labra Gayo</a>, 
+<a href="http://www.mayo.edu/research/faculty/solbrig-harold-ralph/bio-20022700">Harold Solbrig</a>, 
+<a href="http://www.semantics.cc/">10th International Conference on Semantic Systems</a>, 
+Sept. 2014, Leipzig, Germany, 
+<a href="papers/semantics2014.pdf">PDF</a>
+(<a href="http://www.slideshare.net/jelabra/semantics-2014">slides</a>)
+</li>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<li><i>Validating and Describing Linked Data Portals using RDF Shape Expressions</i>, 
+<a href="http://www.di.uniovi.es/~labra">Jose Emilio Labra Gayo</a>, 
+<a href="http://www.w3.org/People/Eric/">Eric Prud'hommeaux</a>, 
+<a href="http://www.mayo.edu/research/faculty/solbrig-harold-ralph/bio-20022700">Harold Solbrig</a>, 
+<a href="http://www.josemalvarez.es/"Jose María Álvarez Rodríguez</a>, 
+<a href="http://ldq.semanticmultimedia.org/">1st Workshop on Linked Data Quality</a>, 
+Sept. 2014, Leipzig, Germany, 
+<a href="papers/ldq2014.pdf">PDF</a> 
+(<a href="http://www.slideshare.net/jelabra/linked-dataquality-2014">slides</a>)</li>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/labra">labra</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
-    
+<li>
+<i>Complexity and Expressiveness of ShEx for RDF</i>,
+<a href="http://www.grappa.univ-lille3.fr/~staworko/">Sławek Staworko</a>,
+<a href="http://www.lifl.fr/~boneva/">Iovka Boneva</a>,
+<a href="http://www.di.uniovi.es/~labra">Jose Emilio Labra Gayo</a>, 
+<a href="http://www.lifl.fr/~hym/">Samuel Hym</a>,
+<a href="http://www.w3.org/People/Eric/">Eric Prud'hommeaux</a>, 
+<a href="http://www.mayo.edu/research/faculty/solbrig-harold-ralph/bio-20022700">Harold Solbrig</a>, 
+<a href="http://edbticdt2015.be/">ICDT: 18th International Conference on Database Theory</a>, 
+March 23-27, 2015, Brussels, Belgium, 
+<a href="papers/staworko-icdt15a.pdf">PDF</a>
+</li>
+
+<li>
+<i><a href="http://www.sciencedirect.com/science/article/pii/S0167642314000094">Inductive Representations of RDF Graphs</a></i>,
+<a href="http://www.di.uniovi.es/~labra">Jose Emilio Labra Gayo</a>, 
+<a href="http://www.staff.science.uu.nl/~jeuri101/homepage/">Johan Jeuring</a>,
+<a href="http://www.josemalvarez.es/">Jose María Álvarez Rodríguez</a>, 
+Science of Computer Programming, Volume 95, Part 1, 1 December 2014, Pages 135–146, 
+Special Issue on Special Issue on Systems Development by Means of Semantic Technologies,
+<a href="papers/scp14.bib">Bibtex</a>,  
+<a href="papers/scp14.pdf">Draft paper in PDF</a>
+</li>
+
+</ul>
+
+<section>
+<h2 id="links">Further information about Shape Expressions</h2>
+<ul>
+<li><a href="http://www.w3.org/2013/ShEx/Definition.html">Shape Expressions Language Definition</a></li>
+<li><a href="http://www.w3.org/2013/ShEx/Primer">Primer</a></li>
+<li><a href="http://www.w3.org/2001/sw/wiki/ShEx">Wiki</a></li>
+<li><a href="http://shexspec.github.io/test-suite/index.html">Test-suite (also contains examples of ShEx)</a></li>
+<li><a href="http://www.w3.org/2013/ShEx/FancyShExDemo">Fancy Demo</a> (Eric Prud'hommeaux implementation)</li>
+</ul>
+</section>
+
+<section>
+<h2 id="credits">Credits</h2>
+<ul>
+<li><a href="http://www.di.uniovi.es/~labra">Jose Emilio Labra Gayo</a></li>
+<li><a href="http://www.w3.org/People/Eric/">Eric Prud'Hommeaux</a></li>
+</ul>
+</section>
+
+
   </body>
 </html>
