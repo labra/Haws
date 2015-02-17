@@ -3,8 +3,8 @@
 module RDF(
 	URI,u,
 	BNode,Literal,Subject(..),Predicate, Object(..), 
-	Triple(..), Graph(..), Node,
-	uri_s, uri_p, bnode_s,bnode_o, uri_o,
+	Triple(..), Graph(..), emptyGraph, Node,
+	uri_s, uri_p, bnode_s,bnode_o, uri_o,o2s,
 	surroundingTriples,
 	noTriples,
 	same_object,
@@ -116,6 +116,8 @@ data Graph = Graph { triples :: Set Triple }
  
 instance Show Graph where 
  show (Graph ts) = Set.foldr (\t s -> show t ++ "\n" ++ s) "" ts
+
+emptyGraph = Graph {triples = Set.empty }
 
 type Node = Subject
 

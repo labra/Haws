@@ -1,5 +1,5 @@
 -- Semantics of LDOM
--- Attempt to define a denotatinal semantics of LDOM
+-- Denotatinal semantics of LDOM
 -- This paper follows the Shapes vocabulary defined by RDF Data Shapes group LDOM proposal
 -- Author: Jose Emilio Labra Gayo
 module LDOM where
@@ -9,29 +9,10 @@ import Sets
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-data Context = 
-  Context { typing :: Typing
-          , graph  ::  Graph
-		  , schema :: Schema
-		  }
-
-addTyping :: Node -> Label -> Context -> Context
-addTyping n l ctx = ctx { typing = addType n l (typing ctx) }
-
--- Find a regular shape expression in a context
--- findRSE :: Context -> Label -> Shape
--- findRSE ctx label = lookupRSE label (schema ctx)
-
-data Var = Var Label
- deriving (Eq, Ord)
- 
-instance Show Var where
- show (Var v) = "?" ++ show v
-
 data Schema = Schema (Set (Label,Shape))
 
 instance Show Schema where
- show (Schema s) = "Schema: " ++ show s
+ show (Schema s) = "Schema: " ++ showSet s
  
 lookupShape :: Label -> Schema -> Shape
 lookupShape label (Schema s) = 
@@ -41,12 +22,21 @@ lookupShape label (Schema s) =
   Set.filter (\(l,e)-> label == l) $
   s
 
-
+emptySchema = Schema Set.empty
   
 -- Shape Expressions 
 
-type Vo = Set Object
-type Vs = Set Subject
+data Value = ValueSet (Set Object)
+           | ValueType URI
+		   | ValueRef Label
+	deriving (Eq,Ord)
+
+instance Show Value where
+ show (ValueSet s) = "(" ++ showSet s ++ ")"
+ show (ValueType uri) = show uri
+ show (ValueRef lbl) = "@" ++ show lbl
+				 
+			  
 data Unbound
 data Cardinality = From Int       -- From m = m | m + 1 | ... 
                  | Range Int Int  -- Between m and n
@@ -70,143 +60,174 @@ opt = Range 0 1
 
 data Shape = Fail String
            | Empty
-		   | Arc Predicate Vo Cardinality
-		   | InvArc Predicate Vs Cardinality
+		   | Arc Predicate Value Cardinality
+		   | InvArc Predicate Value Cardinality
 		   | And Shape Shape
 		   | Or Shape Shape
+		   | Xor Shape Shape
+		   | Not Shape
 		   | Closed Shape
-		   -- | Not RSE
-		   -- | Star RSE
 	deriving (Eq,Ord)
 	
 instance Show Shape where 
   show (Fail str)   = "fail " ++ str
   show (Empty)      = "empty"
-  show (Arc p vo c)  = "arc " ++ show p ++ "-> " ++ showSet vo ++ show c
-  show (InvArc p vs c)  = "invarc " ++ show p ++ "<- " ++ showSet vs ++ show c
+  show (Arc p v c)  = "arc " ++ show p ++ "-> " ++ show v ++ show c
+  show (InvArc p v c)  = "invarc " ++ show p ++ "<- " ++ show v ++ show c
   show (And e1 e2)  = "( " ++ show e1 ++ " , " ++ show e2 ++ " )"
   show (Or e1 e2)   = "( " ++ show e1 ++ " | " ++ show e2 ++ " )"
---  show (Not e)      = "! " ++ show e ++ " | "
---  show (Star e)     = "( " ++ show e ++ " )*"
+  show (Xor e1 e2)   = "( " ++ show e1 ++ " |xor| " ++ show e2 ++ " )"
+  show (Not e)      = "(! " ++ show e ++ ")"
+  show (Closed e)      = "[ " ++ show e ++ "]"
 
-type SingleResult = 
-  ( Set Triple -- Checked triples
-  , Set Triple -- Remaining triples
-  , Typing     -- Resulting typing
-  )
+data ValidationState = ValidationState { 
+    checked   :: Set Triple -- Checked triples
+  , remaining :: Set Triple -- Remaining triples
+  , typing    :: Typing     -- Resulting typing
+  }
+ deriving (Eq)
+
+instance Show ValidationState where 
+ show s = "\nchecked: " ++ showSet (checked s) ++ "\n" ++
+          "remaining: " ++ showSet (remaining s) ++ "\n" ++
+		  "typing: " ++ show (typing s)
+
+state :: (Typing, Set Triple, Set Triple) -> ValidationState
+state (t,cs,rs) = ValidationState { typing = t, checked = cs, remaining = rs }
+		  
+type Result = [ValidationState]
+
+data Context = Context { 
+  graph  :: Graph
+, schema :: Schema 
+, currentTyping :: Typing
+}
+
+
+addTyping :: Node -> Label -> Context -> Context
+addTyping n lbl ctx = ctx { currentTyping = addType n lbl (currentTyping ctx) }
+
+validate :: Node -> Label -> Context -> Result
+validate n lbl ctx = matchNode lbl n ctx
+
+matchNode :: Label -> Node -> Context -> Result
+matchNode lbl n ctx = matchShape shape ts (addTyping n lbl ctx)
+ where shape  = lookupShape lbl (schema ctx)
+       ts = surroundingTriples n (graph ctx)
+	   
+matchShape :: Shape -> Set Triple -> Context -> Result
+matchShape Empty ts ctx = [state (currentTyping ctx, noTriples, ts)]
+
+matchShape (Arc p v (From m)) ts ctx =
+ matchArcFrom m p v ts ctx
+
+
+matchShape (Arc p v (Range m n)) ts ctx =
+ matchArcRange m n p v ts ctx
+
  
-type Result = [SingleResult]
+matchShape (And e1 e2) ts ctx =
+ do {
+   state1 <- matchShape e1 ts ctx
+ ; state2 <- matchShape e2 (remaining state1) ctx
+ ; return (state2 { typing = combineTypings (typing state1) (typing state2)
+                  , checked = checked state1 `Set.union` checked state2
+                  }) 
+ }
+
+matchShape (Or e1 e2) ts ctx =
+      matchShape e1 ts ctx ++
+	  matchShape e2 ts ctx
+
+matchShape (Xor e1 e2) ts ctx =
+      matchShape (Or (And e1 (Not e2)) (And e2 (Not e1))) ts ctx
+
+matchShape (Not e) ts ctx = 
+       if null (matchShape e ts ctx) 
+	   then [state (currentTyping ctx, ts, noTriples) ]
+	   else []
+	  
+matchShape (Closed shape) ts ctx = filter noRemaining results
+  where results = matchShape shape ts ctx
+        noRemaining :: ValidationState -> Bool
+        noRemaining s = Set.null (remaining s)
+
+combine :: Typing -> Triple -> ValidationState -> ValidationState
+combine t triple s = 
+ s { typing = combineTypings t (typing s)
+   , checked = insert triple (checked s)
+   }
+
+-- validateArcFrom
+matchArcFrom :: Int -> Predicate -> Value -> Set Triple -> Context -> Result
+matchArcFrom m _ _ _ _ | m < 0 = error "negative number in cardinality not allowed"
+matchArcFrom 0 p v ts ctx = [state (currentTyping ctx,noTriples,ts)]
+matchArcFrom m p v ts ctx | m >= 1 = 
+ do {
+   (triple,rs) <- decompByPredicate p ts
+ ; typing <- matchArc p v triple ctx
+ ; state <- matchArcFrom (m - 1) p v rs ctx
+ ; return (combine typing triple state)
+ }
+
  
-validate :: Node -> Label -> Schema -> Graph -> Result
-validate n l schema graph = validateShape shape noTriples ts typing 
- where shape  = lookupShape l schema
-       typing = singleTyping n l
-       ts = surroundingTriples n graph
+-- validateArcRange 
+matchArcRange :: Int -> Int -> Predicate -> Value -> Set Triple -> Context -> Result
  
-validateShape :: Shape -> Set Triple -> Set Triple -> Typing -> Result
-validateShape (Empty) cs rs typing = [(cs, rs, typing)]
+matchArcRange 0 n p v ts ctx | n >= 0 = 
+ if noMatchArc p v ts ctx 
+ then [state (currentTyping ctx,noTriples,ts)]
+ else
+  do {
+    (triple,rs) <- decompByPredicate p ts
+  ; typing <- matchArc p v triple ctx
+  ; state <- matchArcRange 0 (n - 1) p v rs ctx
+  ; return (combine typing triple state)
+  }
 
-validateShape (Arc p vo (Range m n)) cs rs typing =
- validateArcRange m n p vo cs rs typing
+matchArcRange m n _ _ _ _ | m < 0 || n < 0 = []
+matchArcRange m n _ _ _ _ | m > n = error ("Arc with incorrect range. m = " ++ show m ++ " > " ++ show n)
 
-validateShape (Arc p vo (From m)) cs rs typing =
- validateArcFrom m p vo cs rs typing
+matchArcRange m n p v ts ctx   
+ | m <= n && m > 0 = 
+ do {
+   (triple,rs) <- decompByPredicate p ts
+ ; typing <- matchArc p v triple ctx
+ ; state  <- matchArcRange (m - 1) (n - 1) p v rs ctx
+ ; return (combine typing triple state)
+ }
+
+noMatchArc :: Predicate -> Value -> Set Triple -> Context -> Bool
+noMatchArc p v ts ctx = matchArcAny p v ts ctx == []
+	
+matchArcAny :: Predicate -> Value -> Set Triple -> Context -> [Typing]
+matchArcAny p v ts ctx = if Set.null ts then []
+ else let (t,ts') = divide ts
+      in matchArc p v t ctx ++ 
+	     matchArcAny p v ts' ctx
  
-validateShape (And e1 e2) cs rs typing =
-     undefined
-
-	 
-validateShape (Closed shape) cs rs typing =
-		filter noRemaining results
-  where results = validateShape shape cs rs typing 
-        noRemaining :: SingleResult -> Bool
-        noRemaining (cs,rs,typing) = Set.null rs
-
-validateArcFrom :: Int -> Predicate -> Set Object -> Set Triple -> Set Triple -> Typing -> Result
-validateArcFrom m _ _ _ _ _ | m < 0 = error "negative number in cardinality not allowed"
-validateArcFrom 0 p vo cs rs typing = [(cs,rs,typing)]
-validateArcFrom m p vo cs rs typing = 
-    let splits = splitByPredicate p rs
-        validated_arcs = concat (map (\(t,rs') -> validateArc p vo cs t rs' typing) splits)
-    in concat (map (\(cs',rs',typing') -> validateArcFrom (m - 1) p vo cs' rs' typing') validated_arcs) 
-
-		
-validateArcRange :: Int -> Int -> Predicate -> Set Object -> Set Triple -> Set Triple -> Typing -> Result
-validateArcRange 0 n p vo cs rs typing | n >= 0 = 
- if Set.size (filterMatches p vo rs) <= n then [(cs,rs,typing)]
- else []
-
-validateArcRange m n _ _ _ _ _ | m < 0 || n < 0 = error ("Arc with incorrect range. negative values not allowed ")
-validateArcRange m n _ _ _ _ _ | m > n = error ("Arc with incorrect range. m = " ++ show m ++ " > " ++ show n)
-
-validateArcRange m n p vo cs rs typing   
- | m <= n = 
-    let splits = splitByPredicate p rs
-        validated_arcs = concat (map (\(t,rs') -> validateArc p vo cs t rs' typing) splits)
-    in concat (map (\(cs',rs',typing') -> validateArcRange (m - 1) (n - 1) p vo cs' rs' typing') validated_arcs) 
-
-validateArc :: Predicate -> Vo -> Set Triple -> Triple -> Set Triple -> Typing -> Result
-validateArc p vo cs triple rs typing =
-  if matchArc p vo triple then [(insert triple cs, rs, typing)]
+matchArc :: Predicate -> Value -> Triple -> Context -> [Typing]
+matchArc p v t ctx = 
+  if matchPredicate p (predicate t) 
+  then matchValue v (object t) ctx
   else []
-
-matchArc :: Predicate -> Vo -> Triple -> Bool
-matchArc p vo t = matchPredicate p (predicate t) &&
-                  matchValue vo (object t)
-
+  
 matchPredicate :: Predicate -> Predicate -> Bool
 matchPredicate = (==)
 				  
-matchValue :: Set Object -> Object -> Bool
-matchValue vo o = member o vo
+matchValue :: Value -> Object -> Context -> [Typing]
+matchValue (ValueSet s) o ctx = 
+ if member o s then [emptyTyping]
+ else []
 
-valueSet :: [URI] -> Vo 
-valueSet = Set.fromList . map ObjectURI
+matchValue (ValueType uri) o ctx = undefined
+matchValue (ValueRef label) o ctx = 
+   map typing (matchNode label (o2s o) ctx)
 
-splitByPredicate :: Predicate -> Set Triple -> [(Triple, Set Triple)]
-splitByPredicate p ts = map (\t -> (t,Set.delete t ts)) filtered
- where filtered = Set.toList (Set.filter (\t -> predicate t == p) ts)
+-- Utility function to create value sets from list of URIs
+valueSet :: [URI] -> Value 
+valueSet = ValueSet . Set.fromList . map ObjectURI
 
-filterMatches :: Predicate -> Vo -> Set Triple -> Set Triple
-filterMatches p vo = Set.filter (matchArc p vo)
-
-{- | m >= 0 && m < n = 
- | m >= 0 && m == n = -}
- 
-{-
-match :: Context -> RSE -> Graph -> Typing
-match ctx e (Graph (t:ts)) = 
-	let (e',typing) = deriv ctx e t
-    in combineTypings typing (match ctx e' (Graph ts))
-match ctx e (Graph []) = 
-	if nullable e then typing ctx
-                  else emptyTyping
-
-matchSchema :: Context -> Label -> Node -> Typing
-matchSchema ctx label n = let rse = findRSE ctx label
-                              shapeN  = shape n (graph ctx)
-						  in match (addTyping n label ctx) rse shapeN
-				  
-matchStep :: Context -> RSE -> Graph -> [(RSE,Typing)]
-matchStep ctx e (Graph (t:ts)) = 
-    let (e',typing) = deriv ctx e t
-        next        = matchStep ctx e' (Graph ts)
-        nextTyping  = snd (head next)
-    in (e, combineTypings typing nextTyping) : next
-matchStep ctx e (Graph []) = 
-	if nullable e then [(e,typing ctx)]
-                  else [(Fail "Non nullable", emptyTyping)]
-
-matchSchemaStep :: Context -> Label -> Node -> [(RSE,Typing)]
-matchSchemaStep ctx label n = 
-    let rse = findRSE ctx label
-        shapeN  = shape n (graph ctx)
-	in matchStep (addTyping n label ctx) rse shapeN
-
-showSteps :: Show a => [a] -> IO ()
-showSteps steps = putStrLn $ foldr (\l r -> show l ++ "\n" ++ r) "" steps
-	-}
-
--- Tests
-
+decompByPredicate :: Predicate -> Set Triple -> [(Triple, Set Triple)]
+decompByPredicate p = decompBy (\t -> predicate t == p) 
 
