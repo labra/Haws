@@ -68,22 +68,9 @@ The semantics has been translated to Haskell to obtain an executable semantic pr
 
 <section id="FullLDOMSyntax">
 <h2>Full LDOM syntax</h2>
-<p>The full LDOM syntax contains some constructs 
-   which can be represented in terms of the simplified syntax</p>
-</section>
 
-<section id="SimplificationSyntax">
-<h2>Simplification rules</h2>
+<p>The full LDOM syntax can be defined as:
 
-<p>Xor(e1,e2) = Or(And(e1,not(e2)),And(e2,not(e2)))</p>
-<p>And(e1,e2,...eN) = And(e1,And(e2,...And(eN,Empty)))</p>
-<p>Or(e1,e2,...eN) = Or(e1,Or(e2,...Or(eN,Empty)))</p>
-
-</section>
-		
-<section id="AbstractSyntax">
-<h2>Simple syntax</h2>
-<p>The LDOM simplified syntax can be defined as
 <pre>
 Schema ::= (Label { Shape })*                // A schema contains a map from Labels to Shapes
 
@@ -92,7 +79,6 @@ Shape ::= Empty                              // No constraint
 	   | InvArc Predicate Value Cardinality  // Inverse arc
 	   | And Shape Shape                     // Matches if E and F match
 	   | Or Shape Shape                      // Matches if either E or F match
-	   | XOr Shape Shape                     // Matches if either E or F matches but not both
 	   | Not Shape                           // Matches if E does not match
 	   | Close Shape                         // Matches if it matches E and there is no remaining triple
 	
@@ -101,6 +87,44 @@ Cardinality ::= {Int,Int}                 // Min,Max-cardinality
 Value ::= ValueSet (O1 O2 ... On)         // Matches a set of values O1...On
         | ValueType URI                   // Matches if the value belongs to the type denoted by URI
         | ValueRef Label                  // Matches if the value is a node that conforms with the shape identified by Label 
+</pre>
+</section>
+
+<section id="SimplificationSyntax">
+<h2>Simplification rules</h2>
+
+<p>
+<pre>
+Xor(e1,e2) = Or(And(e1,not(e2)),And(e2,not(e2)))
+And(e1,e2,...eN) = And(e1,And(e2,...And(eN,Empty)))
+Or(e1,e2,...eN) = Or(e1,Or(e2,...Or(eN,Empty)))
+</pre>
+</p>
+
+</section>
+		
+<section id="AbstractSyntax">
+<h2>Simple syntax</h2>
+<p>The LDOM simplified syntax can be defined as
+<pre>
+Schema ::= (Label { Shape })*     // A schema contains a map from Labels to Shapes
+
+Shape ::= Empty                   // No constraint
+       | BasicArc Cardinality     // Arc with predicate, value and cardinality
+	   | And Shape Shape          // Matches if E and F match
+	   | Or Shape Shape           // Matches if either E or F match
+	   | Not Shape                // Matches if E does not match
+	   | Close Shape              // Matches if it matches E and there is no remaining triple
+	
+Cardinality ::= {Int,Int}         // Min,Max-cardinality
+                            
+BasicArc ::= Arc Predicate Value     // Direct arc
+           | InvArc Predicate Value  // Inverse arc
+
+Value ::= ValueSet (O1 O2 ... On) // Matches a set of values O1...On
+        | ValueType URI           // Matches if the value belongs to the type denoted by URI
+        | ValueRef Label          // Matches if the value is a node that conforms with the shape identified by Label 
+
 </pre>
 </section>
 		
@@ -243,73 +267,82 @@ A context is a tuple <i>(s, g, t)</i> where
 <tr><td>ctx |- matchShape(ts,Empty) = (ctx.typing,{},ts)</td></tr>
 </table>
 
-<p>We distinguish 4 cases for arc depending on the cardinality. When the cardinality is (0,unbounded) 
+<p>We distinguish 5 cases for basic arc depending on the cardinality. 
+
+<ol>
+<li>When the cardinality is {0,unbounded} 
  it matches any set of triples:</p>
 <table class="rule">
 <tr>
-<td rowspan="2">Arc_unbounded1</td>
+<td rowspan="2">BasicArc_unbounded1</td>
 <td class="up">
   &nbsp;
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts,Arc p v (0,unbounded)) = (ctx.typing,{},ts)</td></tr>
+<tr><td>ctx |- matchShape(ts,basicArc {0,unbounded}) = (ctx.typing,{},ts)</td></tr>
 </table>
 
-<p>When the cardinality is <i>(m,unbounded)</i> for <i>m > 0</i> it matches if
- there is one triple that matches and if the rest of triples matches with a cardinality of <i>(m - 1, unbounded)</i>
+<li>When the cardinality is <i>{m,unbounded}</i> for <i>m > 0</i> it matches if
+ there is one triple that matches and if the rest of triples matches 
+ with a cardinality of <i>{m - 1, unbounded}</i>
 
 <table class="rule">
 <tr>
-<td rowspan="2">Arc_unbounded2</td>
+<td rowspan="2">BasicArc_unbounded2</td>
 <td class="up">
 m > 0 &nbsp;&nbsp;&nbsp;
-ctx |- matchValue(o,v) = t1 &nbsp;&nbsp;&nbsp;
-ctx |- matchShape(ts,Arc p v (m - 1,unbounded) = (t2,cs,rs)
+ctx |- matchArc(t,basicArc) = t1 &nbsp;&nbsp;&nbsp;
+ctx |- matchShape(ts,basicArc {m - 1,unbounded}) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(<s,p,o>:ts, Arc p v (m,unbounded)) = (t1 ++ t2,<s,p,o>:cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(t:ts, basicArc {m,unbounded}) = (t1 ++ t2,t:cs,rs)</td></tr>
 </table>
 
-<p>When the cardinality is <i>(0,n)</i> for <i>n >= 0</i> it can match if there is not triple that matches or if there 
- is one triple that matches and the rest of triples matches with a cardinality of <i>(0,n-1)</i>
+<li>When the cardinality is <i>{0, n}</i> for <i>n >= 0</i> it can match if there 
+is not triple that matches or if there 
+is one triple that matches and the rest of triples matches with a cardinality of <i>{0, n-1}</i>
 
 <table class="rule">
 <tr>
-<td rowspan="2">Arc_bounded1</td>
+<td rowspan="2">BasicArc_bounded1</td>
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
 ctx |- not (matchArcs(ts,p,v)) 
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, Arc p v (0,n)) = (ctx.typing,{},ts)</td></tr>
+<tr><td>ctx |- matchShape(ts, BasicArc {0, n}) = (ctx.typing,{},ts)</td></tr>
 </table>
 
+<li>
 <table class="rule">
 <tr>
-<td rowspan="2">Arc_bounded2</td>
+<td rowspan="2">BasicArc_bounded2</td>
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
-matchValue(o,v) = t1  &nbsp;&nbsp;&nbsp;
-ctx |- matchShape(ts,Arc p v (0,n-1)) = (t2,cs,rs)
+matchArc(t,basicArc) = t1  &nbsp;&nbsp;&nbsp;
+ctx |- matchShape(ts,basicArc {0, n - 1}) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(<s,p,o>::ts, Arc p v (0,n)) = (t1++t2,<s,p,o>::cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(t::ts, basicArc {0, n}) = (t1 ++ t2, t::cs, rs)</td></tr>
 </table>
 
-<p>If the cardinality if <i>(m,n)</i> it matches if there is one triple that matches 
- and if the rest of triples match with the cardinality <i>(m-1,n-1)</i></p>
+<li>
+If the cardinality if <i>{m, n}</i> it matches if there is one triple that matches 
+ and if the rest of triples match with the cardinality <i>{m - 1, n - 1}</i></p>
  
 <table class="rule">
 <tr>
-<td rowspan="2">Arc_bounded3</td>
+<td rowspan="2">BasicArc_bounded3</td>
 <td class="up">
 m > 0, n >= m &nbsp;&nbsp;&nbsp;
-matchValue(o,v) = t1  &nbsp;&nbsp;&nbsp;
-ctx |- matchShape(ts,Arc p v (m-1,n-1)) = (t2,cs,rs)
+matchBasicArc(t, basicArc) = t1  &nbsp;&nbsp;&nbsp;
+ctx |- matchShape(ts, basicArc {m-1, n-1} ) = (t2, cs, rs)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(<s,p,o>::ts, Arc p v (m,n)) = (t1++t2,<s,p,o>::cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(t::ts, basicArc {m, n}) = (t1 ++ t2, t::cs, rs)</td></tr>
 </table>
+
+</ul>
 
 <p>If the shape is a conjunction it matches if it matches the first element and 
    then, the second with the remaining triples</p>
@@ -372,13 +405,73 @@ ctx |- matchShape(ts,e) = (t,cs,{})
 <tr><td>ctx |- matchShape(ts, Closed(e)) = (t, cs, {})</td></tr>
 </table>
 
-<!-- Xor -->
-<!-- Close -->
+</section>
+
+<section id="MatchBasicArc">
+<h2>Match BasicArc</h2>
+<p>ctx|-matchBasicArc(triple,basicArc</p>
+
+<table class="rule">
+<tr>
+<td rowspan="2">BasicArc</td>
+<td class="up">
+ctx |- matchValueObject(o,v) = t
+</td>
+</tr>
+<tr><td>ctx |- matchBasicArc(ts, <s,p,o>, Arc p v) = t</td></tr>
+</table>
+
+<table class="rule">
+<tr>
+<td rowspan="2">BasicArc</td>
+<td class="up">
+ctx |- matchValueSubject(s,v) = t
+</td>
+</tr>
+<tr><td>ctx |- matchBasicArc(ts, <s,p,o>, InvArc p v) = t</td></tr>
+</table>
 
 </section>
 
-<section id="MatchValue">
-<h2>Match value</h2>
+<section id="MatchValueObject">
+<h2>Match value object</h2>
+
+<table class="rule">
+<tr>
+<td rowspan="2">valueObjectSet</td>
+<td class="up">
+o in set
+</td>
+</tr>
+<tr><td>ctx |- matchValueObjectSet(o, ValueSet(set)) = ctx.typing</td></tr>
+</table>
+
+<h2>Match value object</h2>
+
+<table class="rule">
+<tr>
+<td rowspan="2">valueObjectType</td>
+<td class="up">
+o hastype t
+</td>
+</tr>
+<tr><td>ctx |- matchValueObjectType(o, ValueType(t)) = ctx.typing</td></tr>
+</table>
+
+<table class="rule">
+<tr>
+<td rowspan="2">valueObjectRef</td>
+<td class="up">
+ctx |- matchNode(o,v) = (t,_,_)
+</td>
+</tr>
+<tr><td>ctx |- matchValueObject(o, ValueRef(label)) = t</td></tr>
+</table>
+
+</section>
+
+<section id="MatchValueSubject">
+<h2>Match value subject</h2>
 </section>
 		 
 </section>
