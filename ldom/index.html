@@ -20,8 +20,8 @@
 	          wgPublicList: "public-data-shapes",
 	          wgPatentURI:  "http://www.w3.org/2004/01/pp-impl/424242/status",
 	      };
-	    </script>
-		<style>
+</script>
+<style>
 			.todo {
 				color: red;
 			}
@@ -33,9 +33,89 @@
 			}
 			table.rule td { text-align: center; }
 			td.up { border-bottom:1px solid black; }
-		</style>  		
-  	</head>
-  	<body>
+.comment {
+        /* font-lock-comment-face */
+        color: #b22222;
+      }
+      .constant {
+        /* font-lock-constant-face */
+        color: #008b8b;
+      }
+      .function-name {
+        /* font-lock-function-name-face */
+        color: #0000ff;
+      }
+      .keyword {
+        /* font-lock-keyword-face */
+        color: #a020f0;
+      }
+      .string {
+        /* font-lock-string-face */
+        color: #8b2252;
+      }
+      .type {
+        /* font-lock-type-face */
+        color: #228b22;
+      }
+      .example {
+        display: inline-block;
+      }
+      .example.wrapper {
+        background-color: #fff;
+      }
+      .example.wrapper pre {
+        background-color: #fcfaee;
+        margin-left: 0;
+        line-height: 1.2;
+      }
+      .example.wrapper .fail {
+        background-color: #fceefa
+      }
+      .verticalDivider {
+        float: left;
+        width: .5em;
+        border:thin solid #fff; /* disappears without this */
+      }
+.highlight1     { margin-left: -5px; margin-right: -5px;   border-left: 5px solid rgba(176, 176, 0, .5); border-right: 5px solid rgba(176, 176, 0, .5); } /* font-weight: bold  ;  */
+.highlight1.top {    margin-top: -5px;                      border-top: 5px solid rgba(176, 176, 0, .5);                                                } /* font-weight: bold  ;  */
+.highlight1.bot { margin-bottom: -5px;                   border-bottom: 5px solid rgba(176, 176, 0, .5);                                                } /* font-weight: bold  ;  */
+.lowlight1      { margin-left: -5px; margin-right: -5px;   border-left: 5px solid transparent; border-right: 5px solid transparent;                     } /* font-weight: normal;  */
+.lowlight1.top  {    margin-top: -5px;                      border-top: 5px solid transparent;                                                          } /* font-weight: normal;  */
+.lowlight1.bot  { margin-bottom: -5px;                   border-bottom: 5px solid transparent;                                                          } /* font-weight: normal;  */
+.highlight2     { margin-left: -5px; margin-right: -5px;   border-left: 5px solid rgba(176, 0, 176, .5); border-right: 5px solid rgba(176, 0, 176, .5); } /* font-weight: bold  ;  */
+.highlight2.top {    margin-top: -5px;                      border-top: 5px solid rgba(176, 0, 176, .5);                                                } /* font-weight: bold  ;  */
+.highlight2.bot { margin-bottom: -5px;                   border-bottom: 5px solid rgba(176, 0, 176, .5);                                                } /* font-weight: bold  ;  */
+.lowlight2      { margin-left: -5px; margin-right: -5px;   border-left: 5px solid rgba(127, 127, 127, .07); border-right: 5px solid rgba(127, 127, 127, .07);         } /* font-weight: normal;  */
+.lowlight2.top  {    margin-top: -5px;                      border-top: 5px solid rgba(127, 127, 127, .07);                                                           } /* font-weight: normal;  */
+.lowlight2.bot  { margin-bottom: -5px;                   border-bottom: 5px solid rgba(127, 127, 127, .07);                                                           } /* font-weight: normal;  */
+.highlightBG1   { /* border: 5px solid transparent; */ background-color: #bb0; font-weight: bold; }
+.lowlightBG1    { /* border: 5px solid transparent; */ font-weight: normal; }
+.highlightBG2   { /* border: 5px solid transparent; */ background-color: #b00; font-weight: bold; }
+.lowlightBG2    { /* border: 5px solid transparent; */ font-weight: normal; }
+.new            { font-weight: bold; }
+.errorSite      { color: red; }
+
+</style>  		
+ <script src="http://www.w3.org/2013/ShEx/demobits/jquery.min.js" type= "text/javascript"></script>
+    <script type="text/javascript"><!--
+function prepareHighlight (highlightables, onClass, offClass, slide) {
+  if (slide === undefined)
+    slide = $("body .namespace").last();
+  $.each( highlightables, function( index, value ){
+    var elts = slide.find( "."+value );
+    elts
+  	.mouseenter(function() {
+  	    elts.removeClass(offClass).addClass(onClass);
+  	})
+  	.mouseleave(function() {
+  	    elts.removeClass(onClass).addClass(offClass);
+  	})
+    .addClass(offClass);
+  })
+}
+--> </script>
+</head>
+<body>
     
  <section id="abstract">
 <p>
@@ -43,12 +123,15 @@
 These graph structures are captured as <i>shapes</i>, which are expected to correspond to nodes in RDF graphs.
 These shapes identify predicates and their associated cardinalities and datatypes.
 </p>
-<p>This document introduces the semantics of LDOM using inference rules.
+<p>This document introduces the semantics of the LDOM core language features using inference rules.
 </p>
 
 <div class="todo">
 <p>This document is a work in progress proposal based on the core language features. 
 The LDOM language constructs have yet to be defined by the WG</p>
+<p>This document just assumes that some node in an RDF graph 
+ has been selected to check its shape in a schema. 
+ The triggering selection mechanisms are not defined in this document</p>
 </div>
 </section>
 
@@ -73,8 +156,11 @@ The source code is available <a href="https://github.com/labra/Haws/blob/master/
 <p>The full LDOM syntax can be defined as:
 
 <pre>
-Schema ::= (Label { Shape })*           // A schema contains a map from Labels to Shapes
+Schema ::= Label Shape *           // Schema associates a Label with a Shape
+</pre>
 
+
+<pre>
 Shape ::= Empty                         // No constraint
        | BasicArc Cardinality           // Arc with predicate, value and cardinality
 	   | And (Shape1,Shape2,...ShapeN)  // Matches if E and F match
@@ -82,15 +168,68 @@ Shape ::= Empty                         // No constraint
 	   | XOr (Shape1, Shape2)           // Matches if either E or F match
 	   | Not Shape                      // Matches if E does not match
 	   | Close Shape                    // Matches if it matches E and there is no remaining triple
-	
+</pre>
+<pre>	
 BasicArc ::= Arc Predicate Value     // Direct arc
            | InvArc Predicate Value  // Inverse arc
+</pre>
 
+<pre>
 Cardinality ::= {Int,Int}         // Min,Max-cardinality
+</pre>
                             
-Value ::= ValueSet (O1 O2 ... On) // Matches a set of values O1...On
+<pre>
+Value ::= ValueSet (v1 v2 ... vN) // Matches a set of values v1...vN
         | ValueType URI           // Matches if the value belongs to the type denoted by URI
         | ValueRef Label          // Matches if the value is a node that conforms with the shape identified by Label 
+</pre>
+</section>
+<section id="example">
+<h2>Example</h2>
+
+<div class="example wrapper">
+	  
+<pre class="schema turtle" style="float:left;">
+<span class="comment"># shapes (Turtle)</span>
+<span class="function-name">sh:IssueShape</span> <span class="keyword">a</span> <span class="type">ldom:</span><span class="constant">Shape</span> ;
+    <span class="state      lowlight1 top"><span class="type">ldom:</span><span class="constant">property</span> [                                     </span>
+    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">predicate</span> <span class="type">ex:</span><span class="constant">state</span> ;                       </span>
+<div class="enumChoice collection">    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">allowedValue</span> <span class="stateValue lowlight2 top bot">(<span class="type">ex:</span><span class="constant">unassigned</span> <span class="type">ex:</span><span class="constant">assigned</span>)</span> ; </span>
+</div><div class="enumChoice objectlist">    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">allowedValue</span> <span class="stateValue lowlight2 top bot"><span class="type">ex:</span><span class="constant">unassigned</span> , <span class="type">ex:</span><span class="constant">assigned</span></span> ; </span>
+</div>    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">minCount</span> 1 ; <span class="type">ldom:</span><span class="constant">maxCount</span> 1               </span>
+    <span class="state      lowlight1 bot">] ;                                                 </span>
+    <span class="reportedBy lowlight1 top"><span class="type">ldom:</span><span class="constant">property</span> [                                     </span>
+    <span class="reportedBy lowlight1    ">    <span class="type">ldom:</span><span class="constant">predicate</span> <span class="type">ex:</span><span class="constant">reportedBy</span> ;                  </span>
+    <span class="reportedBy lowlight1    ">    <span class="type">ldom:</span><span class="constant">valueShape</span> <span class="user lowlight2 top bot"><span class="function-name">sh:UserShape</span></span> ;                  </span>
+    <span class="reportedBy lowlight1    ">    <span class="type">ldom:</span><span class="constant">minCount</span> 1 ; <span class="type">ldom:</span><span class="constant">maxCount</span> 1               </span>
+    <span class="reportedBy lowlight1 bot">] <span class="keyword">.</span>                                                 </span>
+
+<span class="user lowlight2 top bot"><span class="function-name">sh:UserShape</span></span> <span class="keyword">a</span> <span class="type">ldom:</span><span class="constant">Shape</span> ;
+    <span class="name       lowlight1 top"><span class="type">ldom:</span><span class="constant">property</span> [                                     </span>
+    <span class="name       lowlight1    ">    <span class="type">ldom:</span><span class="constant">predicate</span> <span class="type">foaf:</span><span class="constant">name</span> ;                      </span>
+    <span class="name       lowlight1    ">    <span class="type">ldom:</span><span class="constant">valueType</span> <span class="string lowlight2 top bot"><span class="type">xsd:</span><span class="constant">string</span></span> ;                     </span>
+    <span class="name       lowlight1    ">    <span class="type">ldom:</span><span class="constant">minCount</span> 1 ; <span class="type">ldom:</span><span class="constant">maxCount</span> 1               </span>
+    <span class="name       lowlight1 bot">] ;                                                 </span>
+    <span class="mbox       lowlight1 top"><span class="type">ldom:</span><span class="constant">property</span> [                                     </span>
+    <span class="mbox       lowlight1    ">    <span class="type">ldom:</span><span class="constant">predicate</span> <span class="type">foaf:</span><span class="constant">mbox</span> ;                      </span>
+    <span class="mbox       lowlight1    ">    <span class="type">ldom:</span><span class="constant">nodeType</span> <span class="IRI lowlight2 top bot"><span class="type">ldom:</span><span class="constant">IRI</span></span> ;                        </span>
+    <span class="mbox       lowlight1    ">    <span class="oneOrMore lowlight2 top bot"><span class="type">ldom:</span><span class="constant">minCount</span> 1</span>                                 </span>
+    <span class="mbox       lowlight1 bot">] <span class="keyword">.                                                 </span></span>
+</pre>
+</div>
+
+<p>The example can be defined in the abstract syntax as:
+
+<pre>
+IssueShape 
+ (And (Arc ex:state (ValueSet (ex:unasigned ex:asigned)) {1,1})
+      (Arc ex:reportedBy (ValueRef sh:UserShape) {1,1})
+ )
+
+UserShape 
+ (And (Arc foaf:name (ValueType xsd:string) {1,1})
+       (Arc foaf:mbox (ValueType URI) {1,unbounded})
+ )
 </pre>
 </section>
 
@@ -219,6 +358,7 @@ A context is a tuple <i>(s, g, t)</i> where
  <i>g</i> is an RDF Graph and
  <i>t</i> is a Typing. 
 </p> 
+</section>
 </section>
 		 
 <section id="MatchNode">
@@ -470,8 +610,6 @@ ctx |- matchNode(x,v) = (t,_,_)
 <tr><td>ctx |- matchValueRef(x, ValueRef(label)) = t</td></tr>
 </table>
 
-</section>
-		 
 </section>
 		
 <section class='appendix'>
