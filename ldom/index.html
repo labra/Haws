@@ -63,6 +63,7 @@ This documents contains a formal semantic specification of LDOM.
 The formal semantics is defined in terms of inference rules and axioms.
 
 The semantics has been translated to Haskell to obtain an executable semantic prototype.
+The source code is available <a href="https://github.com/labra/Haws/blob/master/papers/ldom.hs">here</a>.
 </p>
 </section>
 
@@ -120,7 +121,7 @@ Shape ::= Empty                   // No constraint
 </section>
 		
 <section id="NaturalSemantics">
-<h2>Natural semantics</h2>
+<h2>Formal semantics</h2>
 <section id="Formalism">
 <h2>Description of the Formal Semantics</h2>
 <p>The semantics of a Shape schema consist of a 
@@ -142,7 +143,8 @@ the consequent is below the line.
 If an antecedent is of the form <i>not(p)</i>, 
 then it is a negative antecedent; 
 otherwise, it is a positive antecedent. </p>
-
+<p>The formal semantics presented follows the same formalism as the one used for 
+ <a href="http://relaxng.org/spec-20011203.html">RelaxNG</a>
 </section>
 
 <section id="Preliminaries">
@@ -410,63 +412,59 @@ ctx |- matchShape(ts,e) = (t,cs,{})
 
 <table class="rule">
 <tr>
-<td rowspan="2">BasicArc</td>
+<td rowspan="2">ObjectArc</td>
 <td class="up">
-ctx |- matchValueObject(o,v) = t
+ctx |- matchValue(o,v) = t
 </td>
 </tr>
-<tr><td>ctx |- matchBasicArc(ts, <s,p,o>, Arc p v) = t</td></tr>
+<tr><td>ctx |- matchBasicArc(<s,p,o>, Arc p v) = t</td></tr>
 </table>
 
 <table class="rule">
 <tr>
-<td rowspan="2">BasicArc</td>
+<td rowspan="2">SubjectArc</td>
 <td class="up">
-ctx |- matchValueSubject(s,v) = t
+ctx |- matchValue(s,v) = t
 </td>
 </tr>
-<tr><td>ctx |- matchBasicArc(ts, <s,p,o>, InvArc p v) = t</td></tr>
+<tr><td>ctx |- matchBasicArc(<s,p,o>, InvArc p v) = t</td></tr>
 </table>
 
 </section>
 
-<section id="MatchValueObject">
-<h2>Match value object</h2>
+<section id="MatchValue">
+<h2>Match value</h2>
 
 <table class="rule">
 <tr>
-<td rowspan="2">valueObjectSet</td>
+<td rowspan="2">valueSet</td>
 <td class="up">
-o in set
+x in set
 </td>
 </tr>
-<tr><td>ctx |- matchValueObjectSet(o, ValueSet(set)) = ctx.typing</td></tr>
+<tr><td>ctx |- matchValueSet(x, ValueSet(set)) = ctx.typing</td></tr>
 </table>
 
 <table class="rule">
 <tr>
 <td rowspan="2">valueObjectType</td>
 <td class="up">
-o hastype t
+x hastype t
 </td>
 </tr>
-<tr><td>ctx |- matchValueObjectType(o, ValueType(t)) = ctx.typing</td></tr>
+<tr><td>ctx |- matchValueType(x, ValueType(t)) = ctx.typing</td></tr>
 </table>
 
 <table class="rule">
 <tr>
-<td rowspan="2">valueObjectRef</td>
+<td rowspan="2">valueRef</td>
 <td class="up">
-ctx |- matchNode(o,v) = (t,_,_)
+ctx |- matchNode(x,v) = (t,_,_)
 </td>
 </tr>
-<tr><td>ctx |- matchValueObject(o, ValueRef(label)) = t</td></tr>
+<tr><td>ctx |- matchValueRef(x, ValueRef(label)) = t</td></tr>
 </table>
 
-</section>
-
-<section id="MatchValueSubject">
-<h2>Match value subject</h2>
 </section>
 		 
 </section>
