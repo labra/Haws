@@ -72,21 +72,24 @@ The semantics has been translated to Haskell to obtain an executable semantic pr
 <p>The full LDOM syntax can be defined as:
 
 <pre>
-Schema ::= (Label { Shape })*                // A schema contains a map from Labels to Shapes
+Schema ::= (Label { Shape })*           // A schema contains a map from Labels to Shapes
 
-Shape ::= Empty                              // No constraint
-       | Arc Predicate Value Cardinality     // Arc with predicate, value and cardinality
-	   | InvArc Predicate Value Cardinality  // Inverse arc
-	   | And Shape Shape                     // Matches if E and F match
-	   | Or Shape Shape                      // Matches if either E or F match
-	   | Not Shape                           // Matches if E does not match
-	   | Close Shape                         // Matches if it matches E and there is no remaining triple
+Shape ::= Empty                         // No constraint
+       | BasicArc Cardinality           // Arc with predicate, value and cardinality
+	   | And (Shape1,Shape2,...ShapeN)  // Matches if E and F match
+	   | Or (Shape1, Shape2,...ShapeN)  // Matches if either E or F match
+	   | XOr (Shape1, Shape2)           // Matches if either E or F match
+	   | Not Shape                      // Matches if E does not match
+	   | Close Shape                    // Matches if it matches E and there is no remaining triple
 	
-Cardinality ::= {Int,Int}                 // Min,Max-cardinality
+BasicArc ::= Arc Predicate Value     // Direct arc
+           | InvArc Predicate Value  // Inverse arc
+
+Cardinality ::= {Int,Int}         // Min,Max-cardinality
                             
-Value ::= ValueSet (O1 O2 ... On)         // Matches a set of values O1...On
-        | ValueType URI                   // Matches if the value belongs to the type denoted by URI
-        | ValueRef Label                  // Matches if the value is a node that conforms with the shape identified by Label 
+Value ::= ValueSet (O1 O2 ... On) // Matches a set of values O1...On
+        | ValueType URI           // Matches if the value belongs to the type denoted by URI
+        | ValueRef Label          // Matches if the value is a node that conforms with the shape identified by Label 
 </pre>
 </section>
 
@@ -105,26 +108,14 @@ Or(e1,e2,...eN) = Or(e1,Or(e2,...Or(eN,Empty)))
 		
 <section id="AbstractSyntax">
 <h2>Simple syntax</h2>
-<p>The LDOM simplified syntax can be defined as
+<p>The full LDOM simplified syntax can be defined as
 <pre>
-Schema ::= (Label { Shape })*     // A schema contains a map from Labels to Shapes
-
 Shape ::= Empty                   // No constraint
        | BasicArc Cardinality     // Arc with predicate, value and cardinality
 	   | And Shape Shape          // Matches if E and F match
 	   | Or Shape Shape           // Matches if either E or F match
 	   | Not Shape                // Matches if E does not match
 	   | Close Shape              // Matches if it matches E and there is no remaining triple
-	
-Cardinality ::= {Int,Int}         // Min,Max-cardinality
-                            
-BasicArc ::= Arc Predicate Value     // Direct arc
-           | InvArc Predicate Value  // Inverse arc
-
-Value ::= ValueSet (O1 O2 ... On) // Matches a set of values O1...On
-        | ValueType URI           // Matches if the value belongs to the type denoted by URI
-        | ValueRef Label          // Matches if the value is a node that conforms with the shape identified by Label 
-
 </pre>
 </section>
 		
@@ -132,8 +123,9 @@ Value ::= ValueSet (O1 O2 ... On) // Matches a set of values O1...On
 <h2>Natural semantics</h2>
 <section id="Formalism">
 <h2>Description of the Formal Semantics</h2>
-<p>The semantics of a Shape schema consist of a specification of what nodes in an RDF graph match a specific shape
- with respect to that schema. 
+<p>The semantics of a Shape schema consist of a 
+specification of what nodes in an RDF graph match a specific shape
+with respect to that schema. 
 The semantics is described formally. 
 The formalism uses axioms and inference rules. 
 Axioms are propositions that are provable unconditionally. 
@@ -147,7 +139,8 @@ The notation for inference rules separates the antecedents from the consequent
 by a horizontal line: 
 the antecedents are above the line; 
 the consequent is below the line. 
-If an antecedent is of the form not(p), then it is a negative antecedent; 
+If an antecedent is of the form <i>not(p)</i>, 
+then it is a negative antecedent; 
 otherwise, it is a positive antecedent. </p>
 
 </section>
@@ -181,6 +174,10 @@ For our purposes, an RDF graph has the following operations:
 <tr>
 <td>g1 union g2</td>
 <td>Union of graphs <i>g1</i> and <i>g2</i>
+</tr>
+<tr>
+<td>g1 intersection g2</td>
+<td>Intersection of graphs <i>g1</i> and <i>g2</i>
 </tr>
 <tr>
 <td>g.triplesAround(node)</td>
@@ -351,11 +348,11 @@ ctx |- matchShape(ts, basicArc {m-1, n-1} ) = (t2, cs, rs)
 <tr>
 <td rowspan="2">And</td>
 <td class="up">
-ctx |- matchShape(ts, e1) = (t1, cs1, rs) &nbsp;&nbsp;&nbsp;
-ctx |- matchShape(rs, e2) = (t2, cs2, rs')
+ctx |- matchShape(ts, e1) = (t1, cs1, rs1) &nbsp;&nbsp;&nbsp;
+ctx |- matchShape(ts, e2) = (t2, cs2, rs2)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, And(e1, e2) = (t1 ++ t2, cs1 ++ cs2, rs')</td></tr>
+<tr><td>ctx |- matchShape(ts, And(e1, e2) = (t1 ++ t2, cs1 union cs2, rs1 intersection rs2)</td></tr>
 </table>
 
 <p>If the shape is a disjunction it matches if either the first element matches or the second one does</p>
