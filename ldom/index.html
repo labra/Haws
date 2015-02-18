@@ -65,10 +65,25 @@ The formal semantics is defined in terms of inference rules and axioms.
 The semantics has been translated to Haskell to obtain an executable semantic prototype.
 </p>
 </section>
+
+<section id="FullLDOMSyntax">
+<h2>Full LDOM syntax</h2>
+<p>The full LDOM syntax contains some constructs 
+   which can be represented in terms of the simplified syntax</p>
+</section>
+
+<section id="SimplificationSyntax">
+<h2>Simplification rules</h2>
+
+<p>Xor(e1,e2) = Or(And(e1,not(e2)),And(e2,not(e2)))</p>
+<p>And(e1,e2,...eN) = And(e1,And(e2,...And(eN,Empty)))</p>
+<p>Or(e1,e2,...eN) = Or(e1,Or(e2,...Or(eN,Empty)))</p>
+
+</section>
 		
 <section id="AbstractSyntax">
-<h2>Abstract syntax</h2>
-<p>The LDOM abstract syntax can be defined as
+<h2>Simple syntax</h2>
+<p>The LDOM simplified syntax can be defined as
 <pre>
 Schema ::= (Label { Shape })*                // A schema contains a map from Labels to Shapes
 
@@ -186,7 +201,7 @@ A context is a tuple <i>(s, g, t)</i> where
 <section id="MatchNode">
 <h2>Match node</h2>
 
-<i>matchNode(ctx, node, label)</i> checks if a <i>node</i> conforms
+<i>ctx |- matchNode(node, label)</i> checks if a <i>node</i> conforms
  with the shape associated with <i>label</i> in context <i>ctx</i>. 
  If it conforms, it returns <i>(t,cs,rs)</i> where 
 <i>t</i> is a typing, 
@@ -199,10 +214,10 @@ A context is a tuple <i>(s, g, t)</i> where
 <td class="up">
  ctx.schema(label) = shape &nbsp;&nbsp;&nbsp; 
  ctx.graph.triplesAround(node) = ts &nbsp;&nbsp;&nbsp;
- matchShape(ctx { node -> label }, ts, shape) = (t,cs,rs)
+ ctx { node -> label } |- matchShape(ts, shape) = (t,cs,rs)
 </td>
 </tr>
-<tr><td>matchNode(ctx,node,label) = (t,cs,rs)</td></tr>
+<tr><td>ctx |- matchNode(node,label) = (t,cs,rs)</td></tr>
 </table>
 </section>
 
@@ -210,7 +225,7 @@ A context is a tuple <i>(s, g, t)</i> where
 <section id="MatchShape">
 <h2>Match Shape</h2>
 
-<i>matchShape(ctx, triples, shape)</i> checks if a set of triples <i>triples</i> conforms
+<i>ctx |- matchShape(triples, shape)</i> checks if a set of triples <i>triples</i> conforms
  with <i>shape</i> in context <i>ctx</i>. 
  If it conforms, it returns <i>(t,cs,rs)</i> where 
 <i>t</i> is a typing, 
@@ -225,7 +240,7 @@ A context is a tuple <i>(s, g, t)</i> where
  &nbsp;
 </td>
 </tr>
-<tr><td>matchShape(ctx,ts,Empty) = (ctx.typing,{},ts)</td></tr>
+<tr><td>ctx |- matchShape(ts,Empty) = (ctx.typing,{},ts)</td></tr>
 </table>
 
 <p>We distinguish 4 cases for arc depending on the cardinality. When the cardinality is (0,unbounded) 
@@ -237,7 +252,7 @@ A context is a tuple <i>(s, g, t)</i> where
   &nbsp;
 </td>
 </tr>
-<tr><td>matchShape(ctx,ts,Arc p v (0,unbounded)) = (ctx.typing,{},ts)</td></tr>
+<tr><td>ctx |- matchShape(ts,Arc p v (0,unbounded)) = (ctx.typing,{},ts)</td></tr>
 </table>
 
 <p>When the cardinality is <i>(m,unbounded)</i> for <i>m > 0</i> it matches if
@@ -248,11 +263,11 @@ A context is a tuple <i>(s, g, t)</i> where
 <td rowspan="2">Arc_unbounded2</td>
 <td class="up">
 m > 0 &nbsp;&nbsp;&nbsp;
-matchValue(ctx,o,v) = t1 &nbsp;&nbsp;&nbsp;
-matchShape(ctx,ts,Arc p v (m - 1,unbounded) = (t2,cs,rs)
+ctx |- matchValue(o,v) = t1 &nbsp;&nbsp;&nbsp;
+ctx |- matchShape(ts,Arc p v (m - 1,unbounded) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>matchShape(ctx,<s,p,o>:ts, Arc p v (m,unbounded)) = (t1 ++ t2,<s,p,o>:cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(<s,p,o>:ts, Arc p v (m,unbounded)) = (t1 ++ t2,<s,p,o>:cs,rs)</td></tr>
 </table>
 
 <p>When the cardinality is <i>(0,n)</i> for <i>n >= 0</i> it can match if there is not triple that matches or if there 
@@ -263,10 +278,10 @@ matchShape(ctx,ts,Arc p v (m - 1,unbounded) = (t2,cs,rs)
 <td rowspan="2">Arc_bounded1</td>
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
-no (matchArcs(ctx,ts,p,v)) 
+ctx |- not (matchArcs(ts,p,v)) 
 </td>
 </tr>
-<tr><td>matchShape(ctx,ts, Arc p v (0,n)) = (ctx.typing,{},ts)</td></tr>
+<tr><td>ctx |- matchShape(ts, Arc p v (0,n)) = (ctx.typing,{},ts)</td></tr>
 </table>
 
 <table class="rule">
@@ -275,10 +290,10 @@ no (matchArcs(ctx,ts,p,v))
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
 matchValue(o,v) = t1  &nbsp;&nbsp;&nbsp;
-matchShape(ctx,ts,Arc p v (0,n-1)) = (t2,cs,rs)
+ctx |- matchShape(ts,Arc p v (0,n-1)) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>matchShape(ctx,<s,p,o>::ts, Arc p v (0,n)) = (t1++t2,<s,p,o>::cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(<s,p,o>::ts, Arc p v (0,n)) = (t1++t2,<s,p,o>::cs,rs)</td></tr>
 </table>
 
 <p>If the cardinality if <i>(m,n)</i> it matches if there is one triple that matches 
@@ -290,10 +305,10 @@ matchShape(ctx,ts,Arc p v (0,n-1)) = (t2,cs,rs)
 <td class="up">
 m > 0, n >= m &nbsp;&nbsp;&nbsp;
 matchValue(o,v) = t1  &nbsp;&nbsp;&nbsp;
-matchShape(ctx,ts,Arc p v (m-1,n-1)) = (t2,cs,rs)
+ctx |- matchShape(ts,Arc p v (m-1,n-1)) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>matchShape(ctx,<s,p,o>::ts, Arc p v (m,n)) = (t1++t2,<s,p,o>::cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(<s,p,o>::ts, Arc p v (m,n)) = (t1++t2,<s,p,o>::cs,rs)</td></tr>
 </table>
 
 <p>If the shape is a conjunction it matches if it matches the first element and 
@@ -303,11 +318,11 @@ matchShape(ctx,ts,Arc p v (m-1,n-1)) = (t2,cs,rs)
 <tr>
 <td rowspan="2">And</td>
 <td class="up">
-matchShape(ctx, ts, e1) = (t1, cs1, rs) &nbsp;&nbsp;&nbsp;
-matchShape(ctx, rs, e2) = (t2, cs2, rs')
+ctx |- matchShape(ts, e1) = (t1, cs1, rs) &nbsp;&nbsp;&nbsp;
+ctx |- matchShape(rs, e2) = (t2, cs2, rs')
 </td>
 </tr>
-<tr><td>matchShape(ctx, ts, And(e1, e2) = (t1 ++ t2, cs1 ++ cs2, rs')</td></tr>
+<tr><td>ctx |- matchShape(ts, And(e1, e2) = (t1 ++ t2, cs1 ++ cs2, rs')</td></tr>
 </table>
 
 <p>If the shape is a disjunction it matches if either the first element matches or the second one does</p>
@@ -316,32 +331,45 @@ matchShape(ctx, rs, e2) = (t2, cs2, rs')
 <tr>
 <td rowspan="2">Or_1</td>
 <td class="up">
-matchShape(ctx, ts, e1) = (t, cs, rs)
+ctx |- matchShape(ts, e1) = (t, cs, rs)
 </td>
 </tr>
-<tr><td>matchShape(ctx, ts, Or(e1,e2) = (t, cs, rs)</td></tr>
+<tr><td>ctx |- matchShape(ts, Or(e1,e2) = (t, cs, rs)</td></tr>
 </table>
 
 <table class="rule">
 <tr>
 <td rowspan="2">Or_2</td>
 <td class="up">
-matchShape(ctx,ts,e2) = (t, cs, rs)
+ctx |- matchShape(ts, e2) = (t, cs, rs)
 </td>
 </tr>
-<tr><td>matchShape(ctx,ts, Or(e1,e2) = (t, cs, rs)</td></tr>
+<tr><td>ctx |- matchShape(ts, Or(e1,e2) = (t, cs, rs)</td></tr>
 </table>
 
-<p>If the shape is a negation of a shape if matches if the shape does not match</p>
+<p>If the shape is a negation of a shape it matches if the shape does not match</p>
 
 <table class="rule">
 <tr>
 <td rowspan="2">Not</td>
 <td class="up">
-no(matchShape(ctx,ts,e))
+ctx |- no(matchShape(ts,e))
 </td>
 </tr>
-<tr><td>matchShape(ctx,ts, Not(e) = (t, ts, {})</td></tr>
+<tr><td>ctx |- matchShape(ts, Not(e)) = (t, ts, {})</td></tr>
+</table>
+
+<p>A set of triples matches a closed shape if the set of triples matches the shape
+ and there are no remaining triples</p>
+
+<table class="rule">
+<tr>
+<td rowspan="2">Close</td>
+<td class="up">
+ctx |- matchShape(ts,e) = (t,cs,{})
+</td>
+</tr>
+<tr><td>ctx |- matchShape(ts, Closed(e)) = (t, cs, {})</td></tr>
 </table>
 
 <!-- Xor -->
