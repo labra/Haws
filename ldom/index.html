@@ -155,29 +155,45 @@ The source code is available <a href="https://github.com/labra/Haws/blob/master/
 
 <p>The full LDOM syntax can be defined as:
 
+<p>A schema is a list of Labels associated with shapes
+
 <pre>
 Schema ::= Label Shape *           // Schema associates a Label with a Shape
 </pre>
 
+<p>The abstract syntax of shapes can be recursively defined as:</p>
 
 <pre>
-Shape ::= Empty                         // No constraint
-       | BasicArc Cardinality           // Arc with predicate, value and cardinality
-	   | And (Shape1,Shape2,...ShapeN)  // Matches if E and F match
-	   | Or (Shape1, Shape2,...ShapeN)  // Matches if either E or F match
-	   | XOr (Shape1, Shape2)           // Matches if either E or F match
-	   | Not Shape                      // Matches if E does not match
-	   | Close Shape                    // Matches if it matches E and there is no remaining triple
+Shape ::= Empty                          // No constraint
+        | BasicArc Cardinality           // Arc with predicate, value and cardinality
+		| BasicArc "+"                   // 1 or more basic arcs
+		| BasicArc "?"                   // 0 or 1 basic arcs
+		| BasicArc "*"                   // 0 or more basic arcs
+	    | And (Shape1,Shape2,...ShapeN)  // Matches if E and F match
+	    | Or (Shape1, Shape2,...ShapeN)  // Matches if either E or F match
+	    | XOr (Shape1, Shape2)           // Matches if either E or F match
+	    | Not Shape                      // Matches if E does not match
+	    | Close Shape                    // Matches if it matches E and there is no remaining triple
 </pre>
+
+<p>Basic arcs can be direct arcs or inverse arcs.</p>
+
 <pre>	
 BasicArc ::= Arc Predicate Value     // Direct arc
            | InvArc Predicate Value  // Inverse arc
 </pre>
 
+<p>Cardinality defines the minimum and maximum cardinality. 
+   The maximum cardinality can be <code>unbounded</code></p>
+
 <pre>
 Cardinality ::= {Int,Int}         // Min,Max-cardinality
 </pre>
-                            
+
+<p>Value specifies if an object matches 
+ with a set of values <i>v1,...,vN</i>, 
+ if it has a type identified by <i>URI</i> 
+ or if it is an node that conforms with the shape identified by <i>Label</i>
 <pre>
 Value ::= ValueSet (v1 v2 ... vN) // Matches a set of values v1...vN
         | ValueType URI           // Matches if the value belongs to the type denoted by URI
@@ -234,10 +250,15 @@ UserShape
 </section>
 
 <section id="SimplificationSyntax">
+
 <h2>Simplification rules</h2>
 
 <p>
 <pre>
+basicArc+ = basicArc { 1,unbounded }
+basicArc? = basicArc { 0,1 }
+basicArc* = basicArc { 0,unbounded }
+
 Xor(e1,e2) = Or(And(e1,not(e2)),And(e2,not(e2)))
 And(e1,e2,...eN) = And(e1,And(e2,...And(eN,Empty)))
 Or(e1,e2,...eN) = Or(e1,Or(e2,...Or(eN,Empty)))
@@ -251,11 +272,11 @@ Or(e1,e2,...eN) = Or(e1,Or(e2,...Or(eN,Empty)))
 <p>The full LDOM simplified syntax can be defined as
 <pre>
 Shape ::= Empty                   // No constraint
-       | BasicArc Cardinality     // Arc with predicate, value and cardinality
+       | BasicArc Cardinality     // Basic arc with cardinality
 	   | And Shape Shape          // Matches if E and F match
 	   | Or Shape Shape           // Matches if either E or F match
 	   | Not Shape                // Matches if E does not match
-	   | Close Shape              // Matches if it matches E and there is no remaining triple
+	   | Close Shape              // Matches if it matches E and there are no remaining triples
 </pre>
 </section>
 		
