@@ -368,6 +368,10 @@ We define the following operations on shape typings:
 <td><i>t1</i> ++ <i>t2</i></td>
 <td>combination of typings <i>t1</i> and <i>t2</i></td>
 </tr>
+<tr>
+<td><i>contains(t,node,label)</td>
+<td>returns true if the typing <i>t</i> asserts that <i>node</i> has shape <i>label</i></td>
+</tr>
 
 </table>
 </section>
@@ -622,10 +626,28 @@ x hastype t
 <tr><td>ctx |- matchValueType(x, ValueType(t)) = ctx.typing</td></tr>
 </table>
 
+<p>ValueRef handles references to shapes. There are two cases, 
+  the first initial case, when the context already contains the declaration
+  that <i>x</i> has shape <i>label</i> just returns the current typing.</p>
+  
+<table class="rule">
+<tr>
+<td rowspan="2">valueRef_1</td>
+<td class="up">
+ contains(ctx.typing, x, label)
+</td>
+</tr>
+<tr><td>ctx |- matchValueRef(x, ValueRef(label)) = ctx.typing</td></tr>
+</table>
+
+<p>The second case, when the context does not contain the declaration that <i>x</i> has the shape <i>label</i>
+ is solved by trying to match <i>x</i> with shape <i>label</i> in the graph.</p>
+ 
 <table class="rule">
 <tr>
 <td rowspan="2">valueRef</td>
 <td class="up">
+not(contains(ctx, x, label)) &nbsp; &nbsp; &nbsp;
 ctx |- matchNode(x,v) = (t,_,_)
 </td>
 </tr>
