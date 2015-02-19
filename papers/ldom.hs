@@ -161,13 +161,19 @@ combine t triple s =
 -- validateArcFrom
 matchArcFrom :: Int -> Predicate -> Value -> Set Triple -> Context -> Result
 matchArcFrom m _ _ _ _ | m < 0 = error "negative number in cardinality not allowed"
-matchArcFrom 0 p v ts ctx = [state (currentTyping ctx,noTriples,ts)]
+matchArcFrom 0 p v ts ctx = 
+ do { 
+   (triple,rs) <- decompByPredicate p ts
+ ; typing <- matchArc p v triple ctx 
+ ; matchArcFrom 0 p v rs ctx
+ } ++ [state (currentTyping ctx,noTriples,ts)]
+ 
 matchArcFrom m p v ts ctx | m >= 1 = 
  do {
    (triple,rs) <- decompByPredicate p ts
  ; typing <- matchArc p v triple ctx
  ; state <- matchArcFrom (m - 1) p v rs ctx
- ; return (combine typing triple state)
+ ; return (combine typing triple state) 
  }
 
  
@@ -221,8 +227,10 @@ matchValue (ValueSet s) o ctx =
  else []
 
 matchValue (ValueType uri) o ctx = undefined
+
 matchValue (ValueRef label) o ctx = 
-   map typing (matchNode label (o2s o) ctx)
+   if contains (currentTyping ctx) (o2s o) label then [currentTyping ctx]
+   else map typing (matchNode label (o2s o) ctx)
 
 -- Utility function to create value sets from list of URIs
 valueSet :: [URI] -> Value 

@@ -322,6 +322,75 @@ test_xor_12_1 = validate node label ctx @?= [s]
   ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
   s = ValidationState { checked = cs, remaining = rs, typing = singleTyping node label }
 
+test_Rec = validate node shapeA ctx @?= [s]
+ where 
+  schema = Schema (mkset [(shapeA, (Arc (u ":p") (ValueRef shapeA) (Range 1 1)))])
+  node = uri_s ":x"
+  shapeA = u "shapeA"
+  graph = Graph ts
+  typ = singleTyping node shapeA
+  cs = mkset [t]
+  rs = noTriples
+  t = triple (":x", ":p", ":x")
+  ts = mkset [t]
+  ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
+  s = ValidationState { checked = cs, remaining = rs, typing = typ }
+  
+test_Ref1 = validate nodeX shapeA ctx @?= [s]
+ where 
+  schema = Schema ( mkset 
+    [(shapeA, (Arc (u ":p") (ValueRef shapeB) (Range 1 1)))
+    ,(shapeB, (Arc (u ":q") (valueSet [u ":b"]) (Range 1 1)))
+	])
+  nodeX = uri_s ":x"
+  nodeY = uri_s ":y"
+  shapeA = u "shapeA"
+  shapeB = u "shapeB"
+  graph = Graph ts
+  typ = addType nodeY shapeB $ singleTyping nodeX shapeA
+  cs = mkset [t1]
+  rs = noTriples
+  t1 = triple (":x", ":p", ":y")
+  t2 = triple (":y", ":q", ":b")
+  ts = mkset [t1,t2]
+  ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
+  s = ValidationState { checked = cs, remaining = rs, typing = typ }
+
+test_Ref2 = validate node shapeA ctx @?= [s]
+ where 
+  schema = Schema ( mkset 
+    [(shapeA, (Arc (u ":p") (valueSet [u ":a"]) (Range 1 1)))
+    ,(shapeB, (Arc (u ":q") (valueSet [u ":b"]) (Range 1 1)))
+	])
+  node = uri_s ":x"
+  shapeA = u "shapeA"
+  shapeB = u "shapeB"
+  graph = Graph ts
+  typ = singleTyping node shapeA
+  cs = mkset [t1,t2]
+  rs = noTriples
+  t1 = triple (":x", ":p", ":a")
+  t2 = triple (":y", ":q", ":b")
+  ts = mkset [t1,t2]
+  ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
+  s = ValidationState { checked = mkset [t1], remaining = noTriples, typing = typ }
+
+test_NegRec = validate node shapeA ctx @?= []
+ where 
+  schema = Schema ( mkset 
+    [(shapeA, (Not (Arc (u ":p") (ValueRef shapeA) (Range 1 1))))
+	])
+  node = uri_s ":x"
+  shapeA = u "shapeA"
+  graph = Graph ts
+  typ = singleTyping node shapeA
+  cs = mkset [t]
+  rs = noTriples
+  t = triple (":x", ":p", ":x")
+  ts = mkset [t]
+  ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
+  s = ValidationState { checked = mkset [t], remaining = noTriples, typing = typ }
+
 main = defaultMain tests
 
 tests = [ testsGraph
@@ -361,5 +430,9 @@ testsSchema =
    , testCase "test_closed_or_12_12_fail" test_closed_or_12_12_fail
    , testCase "test_xor_12_12_fail" test_xor_12_12_fail
    , testCase "test_xor_12_1" test_xor_12_1 
+   , testCase "test_Rec" test_Rec
+   , testCase "test_Ref1" test_Ref1
+   , testCase "test_Ref2" test_Ref2
+   , testCase "test_NegRec" test_NegRec
    ]
 

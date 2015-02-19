@@ -5,6 +5,7 @@ module Typing(Typing(..),
 	addType,
 	singleTyping,
 	combineTypings,
+	contains,
 	Label) where
 import Data.Either(Either(..))
 import Data.Set (Set)
@@ -19,7 +20,9 @@ import Sets
 type Label = URI
 
 data Typing = Typing (Map Node (Set Label))
- deriving Eq
+ 
+instance Eq Typing where
+ (Typing t1) == (Typing t2) = Map.toAscList t1 == Map.toAscList t2
 
 instance Show Typing where
  show (Typing t) = concat (intersperse "," (map (\(n,ls) -> show n ++ "->" ++ showLabels ls) (Map.toList t)))
@@ -27,7 +30,6 @@ instance Show Typing where
 				   
 emptyTyping :: Typing
 emptyTyping = Typing (Map.empty)
-
 
 addType :: Node -> Label -> Typing -> Typing
 addType n l (Typing ts) =  
@@ -40,5 +42,12 @@ singleTyping n l = addType n l emptyTyping
 	
 combineTypings :: Typing -> Typing -> Typing
 combineTypings (Typing ts1) (Typing ts2)= Typing (Map.union ts1 ts2)
+
+contains :: Typing -> Node -> Label -> Bool
+contains (Typing t) n label = 
+ case Map.lookup n t of
+  Nothing -> False
+  Just lbls -> member label lbls
+  
 
 --
