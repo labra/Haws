@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   	<head>
-  	<title>Semantics of LDOM</title>
+  	<title>Semantics of SHACL</title>
    	<meta charset='utf-8'>
     <script src='http://www.w3.org/Tools/respec/respec-w3c-common'
             async class='remove'></script>
@@ -120,16 +120,16 @@ function prepareHighlight (highlightables, onClass, offClass, slide) {
     
  <section id="abstract">
 <p>
-<p>LDOM (Lasagna Dumplings and Ostrich Meatballs) is an RDF vocabulary for describing RDF graph structures.
+<p>SHACL(SHApes Checking Language) is an RDF vocabulary for describing RDF graph structures.
 These graph structures are captured as <i>shapes</i>, which are expected to correspond to nodes in RDF graphs.
 These shapes identify predicates and their associated cardinalities and datatypes.
 </p>
-<p>This document introduces the semantics of the LDOM core language features using inference rules.
+<p>This document introduces the semantics of the SHACL core language features using inference rules.
 </p>
 
 <div class="todo">
 <p>This document is a work in progress proposal based on the core language features. 
-The LDOM language constructs have yet to be defined by the WG</p>
+The SHACL language constructs have yet to be defined by the WG</p>
 <p>This document just assumes that some node in an RDF graph 
  has been selected to check its shape in a schema. 
  The triggering selection mechanisms are not defined in this document</p>
@@ -143,7 +143,7 @@ The LDOM language constructs have yet to be defined by the WG</p>
 <section id="introduction">
 <h2>Introduction</h2>
 <p>
-This documents contains a formal semantic specification of LDOM.
+This documents contains a formal semantic specification of SHACL.
 The formal semantics is defined in terms of inference rules and axioms.
 
 The semantics has been translated to Haskell to obtain an executable semantic prototype.
@@ -151,10 +151,10 @@ The source code is available <a href="https://github.com/labra/Haws/blob/master/
 </p>
 </section>
 
-<section id="FullLDOMSyntax">
-<h2>Full LDOM syntax</h2>
+<section id="FullSHACLSyntax">
+<h2>Full SHACL syntax</h2>
 
-<p>The full LDOM syntax can be defined as:
+<p>The full SHACL syntax can be defined as:
 
 <p>A schema is a list of Labels associated with shapes
 
@@ -270,7 +270,7 @@ Or(e1,e2,...eN) = Or(e1,Or(e2,...Or(eN,Empty)))
 		
 <section id="AbstractSyntax">
 <h2>Simple syntax</h2>
-<p>The full LDOM simplified syntax can be defined as
+<p>The full SHACL simplified syntax can be defined as
 <pre>
 Shape ::= Empty                   // No constraint
        | BasicArc Cardinality     // Basic arc with cardinality
@@ -279,6 +279,7 @@ Shape ::= Empty                   // No constraint
 	   | Not Shape                // Matches if E does not match
 	   | Close Shape              // Matches if it matches E and there are no remaining triples
 </pre>
+
 </section>
 		
 <section id="NaturalSemantics">
@@ -352,7 +353,7 @@ For our purposes, an RDF graph has the following operations:
 
 <section id="Typings">
 <h2>Typings</h2>
-The semantics of LDOM consits of assigning typings to nodes in an RDF graph. 
+The semantics of SHACL consits of assigning typings to nodes in an RDF graph. 
 A typing is a map from RDF nodes (iri's or bNodes) to sets of labels in a Schema. 
 We define the following operations on shape typings:
 
@@ -453,6 +454,7 @@ A context is a tuple <i>(s, g, t)</i> where
 <p>When the cardinality is <i>{m,unbounded}</i> for <i>m > 0</i> it matches if
  there is one triple that matches and if the rest of triples matches 
  with a cardinality of <i>{m - 1, unbounded}</i></p>
+<p>Notice that it only matches if there are at least one triple</p>
 
 <table class="rule">
 <tr>
@@ -477,7 +479,7 @@ is one triple that matches and the rest of triples matches with a cardinality of
 <td rowspan="2">BasicArc_bounded1</td>
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
-ctx |- not (matchArcs(ts,p,v)) 
+ctx |- not (matchArcAny(ts,p,v)) 
 </td>
 </tr>
 <tr><td>ctx |- matchShape(ts, BasicArc {0, n}) = (ctx.typing,{},ts)</td></tr>
@@ -556,7 +558,7 @@ ctx |- matchShape(ts, e2) = (t, cs, rs)
 <tr>
 <td rowspan="2">Not</td>
 <td class="up">
-ctx |- no(matchShape(ts,e))
+ctx |- not(matchShape(ts,e))
 </td>
 </tr>
 <tr><td>ctx |- matchShape(ts, Not(e)) = (t, ts, {})</td></tr>
@@ -655,7 +657,37 @@ ctx |- matchNode(x,v) = (t,_,_)
 </table>
 
 </section>
-		
+
+<section id="MatchArcAny">
+<h2>MatchArcAny</h2>
+<p><i>matchArcAny</i> takes a set of triples and a basic arc and checks if there is some triple
+ in that set that matches with the basic arc.
+ The result is a boolean</p>
+ 
+<p>It has two possibilities. Either it matches the first triple in the set (<i>matchArc_1</i>)
+ or it matches any of the rest of triples in the set (<i>matchArc_2</i>)</p>
+
+<table class="rule">
+<tr>
+<td rowspan="2">matchArcAny_1</td>
+<td class="up">
+ctx |- matchBasicArc(t,basicArc) = (_,_,_)
+</td>
+</tr>
+<tr><td>ctx |- matchArcAny(t:ts, basicArc)</td></tr>
+</table>
+ 
+<table class="rule">
+<tr>
+<td rowspan="2">matchArcAny_2</td>
+<td class="up">
+ctx |- matchArcAny(ts,basicArc)
+</td>
+</tr>
+<tr><td>ctx |- matchArcAny(t:ts, basicArc)</td></tr>
+</table>
+
+</section>		
 <section class='appendix'>
 <h2>Acknowledgements</h2>
 <p>
