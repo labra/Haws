@@ -1,15 +1,14 @@
 -- Common RDF definitions
 
 module RDF(
-	URI,u,
-	BNode,Literal,Subject(..),Predicate, Object(..), 
+	URI(..),u,
+	BNode,Literal(..),Subject(..),Predicate, Object(..), 
 	Triple(..), Graph(..), emptyGraph, Node,
 	uri_s, uri_p, bnode_s,bnode_o, uri_o,o2s,
 	surroundingTriples,
-	noTriples,
-	same_object,
-	triple, mktriples
+	same_object
 	) where
+
 import Data.List(intersperse)
 import Data.Either(Either(..))
 
@@ -38,12 +37,22 @@ instance Show BNode where
  show (BNode b) = "_:" ++ b
 
 data Literal = 
- Literal { 
+ DatatypeLiteral { 
   lexicalForm :: String , 
   datatype :: URI 
  }
+ | LangLiteral {
+  string :: String,
+  lang :: Lang
+ }
  deriving (Eq,Ord,Show)
 
+data Lang = Lang String
+ deriving (Eq,Ord)
+
+instance Show Lang
+ where show (Lang l) = show l
+ 
 data Subject = SubjectURI URI 
              | SubjectBNode BNode
 	deriving (Eq,Ord)
@@ -136,15 +145,3 @@ surroundingTriples :: Node -> Graph -> Set Triple
 surroundingTriples n (Graph ts) = 
 	Set.filter (\t -> same_subject n t || same_object n t) ts
 	
-noTriples :: Set Triple
-noTriples = Set.empty
-
-foldGraph :: (Triple -> a -> a) -> a -> Graph -> a
-foldGraph f e (Graph ts) = Set.foldr f e ts
-
-triple :: (String,String,String) -> Triple
-triple (s,p,o) = Triple { subject = uri_s s, predicate = uri_p p, object = uri_o o }
-
-mktriples :: [(String,String,String)] -> Set Triple
-mktriples = Set.fromList . 
-		    map triple
