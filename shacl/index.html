@@ -478,10 +478,10 @@ is one triple that matches and the rest of triples matches with a cardinality of
 <td rowspan="2">BasicArc_bounded1</td>
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
-ctx |- not (matchArcAny(g,p,v)) 
+ctx |- not (matchArcAny(ts,p,v)) 
 </td>
 </tr>
-<tr><td>ctx |- matchShape(g, BasicArc {0, n}) = (ctx.typing,{},ts)</td></tr>
+<tr><td>ctx |- matchShape(ts, BasicArc {0, n}) = (ctx.typing,{},ts)</td></tr>
 </table>
 
 <li> 
@@ -591,7 +591,7 @@ ctx |- matchValue(s,v) = t
 x in set
 </td>
 </tr>
-<tr><td>ctx |- matchValueSet(x, ValueSet(set)) = ctx.typing</td></tr>
+<tr><td>ctx |- matchValue(x, ValueSet(set)) = ctx.typing</td></tr>
 </table>
 
 <table class="rule">
@@ -601,7 +601,7 @@ x in set
 x hastype t
 </td>
 </tr>
-<tr><td>ctx |- matchValueType(x, ValueType(t)) = ctx.typing</td></tr>
+<tr><td>ctx |- matchValue(x, ValueType(t)) = ctx.typing</td></tr>
 </table>
 
 <p>ValueRef handles references to shapes. There are two cases, 
@@ -615,7 +615,7 @@ x hastype t
  contains(ctx.typing, x, label)
 </td>
 </tr>
-<tr><td>ctx |- matchValueRef(x, ValueRef(label)) = ctx.typing</td></tr>
+<tr><td>ctx |- matchValue(x, ValueRef(label)) = ctx.typing</td></tr>
 </table>
 
 <p>The second case, when the context does not contain the declaration that <i>x</i> has the shape <i>label</i>
@@ -629,7 +629,7 @@ not(contains(ctx, x, label)) &nbsp; &nbsp; &nbsp;
 ctx |- matchNode(x,v) = (t,_,_)
 </td>
 </tr>
-<tr><td>ctx |- matchValueRef(x, ValueRef(label)) = t</td></tr>
+<tr><td>ctx |- matchValue(x, ValueRef(label)) = t</td></tr>
 </table>
 
 </section>
