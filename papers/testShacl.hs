@@ -12,6 +12,13 @@ import Namespaces
 import Sets
 import Typing
 
+test_combineTyping1 = combineTypings typing1 typing2 @?= typing
+ where typing1 = singleTyping (uri_s ":s") (u "shapeC") 
+       typing2 = singleTyping (uri_s ":s") (u "shapeB") 
+       typing = addType (uri_s ":s") (u "shapeC") 
+	          ( singleTyping (uri_s ":s") (u "shapeB") 
+			  )
+ 
 test_surrounding_1 = surroundingTriples (uri_s ":a") graph1 @?= surrounding_1
  where graph1 = Graph( mktriples [ (":a", ":p", ":c")
                           , (":c", ":r", ":e")
@@ -428,15 +435,83 @@ test_arc_string = validate node shapeA ctx @?= [s]
   ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
   s = ValidationState { checked = ts, remaining = noTriples, typing = typ }
 
+test_SeveralTypes1 = validate node shapeA ctx @?= [s]
+ where 
+  schema = Schema ( mkset 
+    [ ( shapeA, And (Arc (u ":p") (ValueRef shapeB) (From 1))
+	                (Arc (u ":q") (ValueRef shapeC) (From 1))
+	  )
+	, ( shapeB, Arc (u ":type") (valueSet [u ":Person"]) (Range 1 1))
+    , ( shapeC, Arc (u ":type") (valueSet [u ":Student"]) (Range 1 1))
+	])
+  node = uri_s ":a"
+  shapeA = u "shapeA"
+  shapeB = u "shapeB"
+  shapeC = u "shapeC"
+  graph = Graph ts
+  typ = addType (uri_s ":s") shapeB 
+      ( addType (uri_s ":t") shapeC
+      ( singleTyping node shapeA
+	  ))
+  rs = noTriples
+  t1 = triple (":a", ":p", ":s")
+  t2 = triple (":a", ":q", ":t")
+  ts = mkset [ t1, t2
+			 , triple (":s", ":type", ":Person")
+			 , triple (":t", ":type", ":Student")
+			 ]
+  ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
+  s = ValidationState { checked = mkset [t1,t2], 
+                                  remaining = noTriples, 
+								  typing = typ 
+  }
+
+test_SeveralTypes2 = validate node shapeA ctx @?= [s]
+ where 
+  schema = Schema ( mkset 
+    [ ( shapeA, And (Arc (u ":p") (ValueRef shapeB) (From 1))
+	                (Arc (u ":p") (ValueRef shapeC) (From 1))
+	  )
+	, ( shapeB, Arc (u ":type") (valueSet [u ":Person"]) (Range 1 1))
+    , ( shapeC, Arc (u ":type") (valueSet [u ":Student"]) (Range 1 1))
+	])
+  node = uri_s ":a"
+  shapeA = u "shapeA"
+  shapeB = u "shapeB"
+  shapeC = u "shapeC"
+  graph = Graph ts
+  typ = addTypes (uri_s ":s") [shapeB, shapeC]
+      ( singleTyping node shapeA )
+  rs = noTriples
+  t1 = triple (":a", ":p", ":s")
+  t2 = triple (":a", ":p", ":w")
+  ts = mkset [ t1
+             , triple (":s", ":type", ":Person")
+			 , triple (":s", ":type", ":Student")
+			 , t2
+			 ]
+  ctx = Context { schema = schema, graph = graph, currentTyping = emptyTyping } 
+  s = ValidationState { checked = mkset [t1], 
+                        remaining = mkset [t2], 
+						typing = typ 
+  }
+
 main = defaultMain tests
 
-tests = [ testsGraph
+tests = [ testTyping
+        , testsGraph
         , testsArc
 		, testsSchema
 		, testsShapeArc
 		, testsShapeGroup
+		, testsIntegration
 		]
 		
+testTyping = 
+ testGroup "Typing" [
+  testCase "combineTyping1" test_combineTyping1
+ ]
+ 
 testsGraph = 
  testGroup "Graph" [
      testCase "test_same_object" test_same_object
@@ -486,3 +561,8 @@ testsShapeGroup =
      testCase "test_Group_both" test_Group_both 
    ]
 
+testsIntegration =
+   testGroup "Integration" [
+     testCase "test_SeveralTypes1" test_SeveralTypes1 
+   , testCase "test_SeveralTypes2" test_SeveralTypes2 
+   ]

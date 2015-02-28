@@ -2,7 +2,7 @@
 -- Shape Typings
 module Typing(Typing(..),
 	emptyTyping,
-	addType,
+	addType,addTypes,
 	singleTyping,
 	combineTypings,
 	contains,
@@ -31,6 +31,9 @@ instance Show Typing where
 emptyTyping :: Typing
 emptyTyping = Typing (Map.empty)
 
+addTypes :: Node -> [Label] -> Typing -> Typing
+addTypes n ls typ = foldr (\lbl t -> addType n lbl t) typ ls
+
 addType :: Node -> Label -> Typing -> Typing
 addType n l (Typing ts) =  
   case Map.lookup n ts of
@@ -41,7 +44,8 @@ singleTyping :: Node -> Label -> Typing
 singleTyping n l = addType n l emptyTyping
 	
 combineTypings :: Typing -> Typing -> Typing
-combineTypings (Typing ts1) (Typing ts2)= Typing (Map.union ts1 ts2)
+combineTypings (Typing ts1) (Typing ts2)= 
+  Typing (Map.unionWith (\s1 s2 -> s1 `Set.union` s2) ts1 ts2)
 
 contains :: Typing -> Node -> Label -> Bool
 contains (Typing t) n label = 

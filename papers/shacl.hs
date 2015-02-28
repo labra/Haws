@@ -139,10 +139,13 @@ matchShape (Arc p v (Range m n)) ts ctx =
 matchShape (And e1 e2) ts ctx =
  do {
    state1 <- matchShape e1 ts ctx
- ; state2 <- matchShape e2 (remaining state1) ctx
- ; return (state2 { typing = combineTypings (typing state1) (typing state2)
-                  , checked = checked state1 `Set.union` checked state2
-                  }) 
+ ; state2 <- matchShape e2 ts ctx
+ ; return 
+   (ValidationState 
+    { typing = combineTypings (typing state1) (typing state2)
+    , checked = checked state1 `Set.union` checked state2
+    , remaining = remaining state1 `Set.intersection` remaining state2
+	}) 
  }
 
 matchShape (Or e1 e2) ts ctx =
@@ -150,7 +153,8 @@ matchShape (Or e1 e2) ts ctx =
 	  matchShape e2 ts ctx
 
 matchShape (Xor e1 e2) ts ctx =
-      matchShape (Or (And e1 (Not e2)) (And e2 (Not e1))) ts ctx
+      matchShape (Or (And e1 (Not e2)) 
+	                 (And e2 (Not e1))) ts ctx
 
 matchShape (Not e) ts ctx = 
        if null (matchShape e ts ctx) 
@@ -251,7 +255,8 @@ matchValue (ValueType uri) (ObjectLiteral (LangLiteral _ _)) ctx =
 matchValue (ValueType uri) _ _ = []
 
 matchValue (ValueRef label) o ctx = 
-   if contains (currentTyping ctx) (o2s o) label then [currentTyping ctx]
+   if contains (currentTyping ctx) (o2s o) label 
+   then [currentTyping ctx]
    else map typing (matchNode label (o2s o) ctx)
 
 -- validateArcFrom
