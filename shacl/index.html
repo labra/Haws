@@ -326,12 +326,14 @@ For our purposes, an RDF graph has the following operations:
 <td>Singleton graph with triple t</td>
 </tr>
 <tr>
-<td><i>t : g</i></td>
-<td>The graph that results of adding triple <i>t</i> to graph <i>g</i></td>
+<td><i>addTriple(t,ts)</i></td>
+<td>The set of triples that results of adding triple <i>t</i> to 
+    the set of triples <i>ts</i></td>
 </tr>
 <tr>
 <td><i>removeTriple(g)</i></td>
-<td>A pair (t,g') where t is a triple removed from g and g' is the remaining graph</td>
+<td>A pair <i>(t,g')</i> where <i>t</i> is a triple removed 
+   from the set of triples <i>g</i> and <i>g'</i> is the remaining triples</td>
 </tr>
 <tr>
 <td>g1 union g2</td>
@@ -360,11 +362,12 @@ We define the following operations on shape typings:
 <td>{}</td><td>empty shape typing</td>
 </tr>
 <tr>
-<td><i>iri -> label :: typing</i></td>
-<td>the result of assigning <i>iri</i> to <i>label</i> in <i>typing</i></td>
+<td><i>node -> label :: typing</i></td>
+<td>the result of associating shape <i>label</i> 
+    to <i>node</i> in <i>typing</i></td>
 </tr>
 <tr>
-<td><i>t1</i> ++ <i>t2</i></td>
+<td><i>combineTypings(t1, t2)</i></td>
 <td>combination of typings <i>t1</i> and <i>t2</i></td>
 </tr>
 <tr>
@@ -477,7 +480,7 @@ ctx |- matchArc(t,basicArc) = t1 &nbsp;&nbsp;&nbsp;
 ctx |- matchShape(ts',basicArc {m - 1,unbounded}) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, basicArc {m,unbounded}) = (t1 ++ t2,t:cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(ts, basicArc {m,unbounded}) = (combineTypings(t1,t2),t:cs,rs)</td></tr>
 </table>
 
 <li>
@@ -508,7 +511,7 @@ matchArc(t,basicArc) = t1  &nbsp;&nbsp;&nbsp;
 ctx |- matchShape(ts',basicArc {0, n - 1}) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, basicArc {0, n}) = (t1 ++ t2, t::cs, rs)</td></tr>
+<tr><td>ctx |- matchShape(ts, basicArc {0, n}) = (combineTypings(t1,t2), addTriple(t,cs), rs)</td></tr>
 </table>
 
 <li>
@@ -525,7 +528,7 @@ matchBasicArc(t, basicArc) = t1  &nbsp;&nbsp;&nbsp;
 ctx |- matchShape(ts', basicArc {m-1, n-1} ) = (t2, cs, rs)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, basicArc {m, n}) = (t1 ++ t2, t::cs, rs)</td></tr>
+<tr><td>ctx |- matchShape(ts, basicArc {m, n}) = (combineTypings(t1,t2), addTriple(t,cs), rs)</td></tr>
 </table>
 
 </ul>
@@ -541,7 +544,7 @@ ctx |- matchShape(ts, e1) = (t1, cs1, rs1) &nbsp;&nbsp;&nbsp;
 ctx |- matchShape(ts, e2) = (t2, cs2, rs2)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, And(e1, e2) = (t1 ++ t2, cs1 union cs2, rs1 intersection rs2)</td></tr>
+<tr><td>ctx |- matchShape(ts, And(e1, e2) = (combineTypings(t1,t2), cs1 union cs2, rs1 intersection rs2)</td></tr>
 </table>
 
 <p>If the shape is a disjunction it matches if either the first element matches or the second one does</p>
@@ -570,7 +573,10 @@ ctx |- matchShape(ts, e2) = (t, cs, rs)
 
 <section id="MatchBasicArc">
 <h2>Match BasicArc</h2>
-<p>ctx|-matchBasicArc(triple,basicArc</p>
+<p>This section covers how to match a basic Arc:
+<i>ctx|-matchBasicArc(triple,basicArc)</i>. 
+<p> There are two cases: direct arcs match the value with the object of the triple 
+  while inverse arcs match the value with the subject the triple</p>
 
 <table class="rule">
 <tr>
@@ -579,7 +585,7 @@ ctx |- matchShape(ts, e2) = (t, cs, rs)
 ctx |- matchValue(o,v) = t
 </td>
 </tr>
-<tr><td>ctx |- matchBasicArc(<s,p,o>, Arc p v) = t</td></tr>
+<tr><td>ctx |- matchBasicArc(&lt;s,p,o&gt;, Arc p v) = t</td></tr>
 </table>
 
 <table class="rule">
@@ -589,7 +595,7 @@ ctx |- matchValue(o,v) = t
 ctx |- matchValue(s,v) = t
 </td>
 </tr>
-<tr><td>ctx |- matchBasicArc(<s,p,o>, InvArc p v) = t</td></tr>
+<tr><td>ctx |- matchBasicArc(&lt;s,p,o&gt;, InvArc p v) = t</td></tr>
 </table>
 
 </section>
@@ -653,27 +659,30 @@ ctx |- matchNode(x,v) = (t,_,_)
  in that set that matches with the basic arc.
  The result is a boolean</p>
  
-<p>It has two possibilities. Either it matches the first triple in the set (<i>matchArc_1</i>)
+<p>It has two possibilities. 
+Either it matches the first triple in the set (<i>matchArc_1</i>)
  or it matches any of the rest of triples in the set (<i>matchArc_2</i>)</p>
 
 <table class="rule">
 <tr>
 <td rowspan="2">matchArcAny_1</td>
 <td class="up">
+removeTriple(ts) = (t,ts') &nbsp;&nbsp;&nbsp; 
 ctx |- matchBasicArc(t,basicArc) = (_,_,_)
 </td>
 </tr>
-<tr><td>ctx |- matchArcAny(t:ts, basicArc)</td></tr>
+<tr><td>ctx |- matchArcAny(ts, basicArc)</td></tr>
 </table>
  
 <table class="rule">
 <tr>
 <td rowspan="2">matchArcAny_2</td>
 <td class="up">
-ctx |- matchArcAny(ts,basicArc)
+removeTriple(ts) = (t,ts') &nbsp;&nbsp;&nbsp;
+ctx |- matchArcAny(ts',basicArc)
 </td>
 </tr>
-<tr><td>ctx |- matchArcAny(t:ts, basicArc)</td></tr>
+<tr><td>ctx |- matchArcAny(ts, basicArc)</td></tr>
 </table>
 
 </section> <!-- matchArcAny -->
