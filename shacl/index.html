@@ -494,7 +494,7 @@ is one triple that matches and the rest of triples matches with a cardinality of
 <td rowspan="2">BasicArc_bounded1</td>
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
-ctx |- not (matchArcAny(ts,p,v)) 
+not (ctx |- matchArcAny(ts,p,v)) 
 </td>
 </tr>
 <tr><td>ctx |- matchShape(ts, BasicArc {0, n}) = (ctx.typing,{},ts)</td></tr>
