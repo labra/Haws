@@ -207,9 +207,11 @@ Value ::= ValueSet (v1 v2 ... vN) // Matches a set of values v1...vN
 <span class="comment"># shapes (Turtle)</span>
 <span class="function-name">sh:IssueShape</span> <span class="keyword">a</span> <span class="type">ldom:</span><span class="constant">Shape</span> ;
     <span class="state      lowlight1 top"><span class="type">ldom:</span><span class="constant">property</span> [                                     </span>
-    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">predicate</span> <span class="type">ex:</span><span class="constant">state</span> ;                       </span>
-<div class="enumChoice collection">    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">allowedValue</span> <span class="stateValue lowlight2 top bot">(<span class="type">ex:</span><span class="constant">unassigned</span> <span class="type">ex:</span><span class="constant">assigned</span>)</span> ; </span>
-</div><div class="enumChoice objectlist">    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">allowedValue</span> <span class="stateValue lowlight2 top bot"><span class="type">ex:</span><span class="constant">unassigned</span> , <span class="type">ex:</span><span class="constant">assigned</span></span> ; </span>
+    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">predicate</span> <span class="type">ex:</span><span class="constant">state</span> ;</span>
+<div class="enumChoice collection">
+ <span class="state      lowlight1    "><span class="type">ldom:</span><span class="constant">allowedValue</span> <span class="stateValue lowlight2 top bot">(<span class="type">ex:</span><span class="constant">unassigned</span> <span class="type">ex:</span><span class="constant">assigned</span>)</span> ; </span>
+</div>
+<div class="enumChoice objectlist">    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">allowedValue</span> <span class="stateValue lowlight2 top bot"><span class="type">ex:</span><span class="constant">unassigned</span> , <span class="type">ex:</span><span class="constant">assigned</span></span> ; </span>
 </div>    <span class="state      lowlight1    ">    <span class="type">ldom:</span><span class="constant">minCount</span> 1 ; <span class="type">ldom:</span><span class="constant">maxCount</span> 1               </span>
     <span class="state      lowlight1 bot">] ;                                                 </span>
     <span class="reportedBy lowlight1 top"><span class="type">ldom:</span><span class="constant">property</span> [                                     </span>
@@ -371,7 +373,7 @@ We define the following operations on shape typings:
 <td>combination of typings <i>t1</i> and <i>t2</i></td>
 </tr>
 <tr>
-<td><i>contains(t,node,label)</td>
+<td><i>contains(t,node,label)</i></td>
 <td>returns true if the typing <i>t</i> asserts that <i>node</i> has shape <i>label</i></td>
 </tr>
 
