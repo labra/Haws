@@ -383,7 +383,7 @@ We define the following operations on shape typings:
 </tr>
 <tr>
 <td><i>contains(t,node,label)</i></td>
-<td>returns true if the typing <i>t</i> asserts that <i>node</i> has shape <i>label</i></td>
+<td>succeeds if typing <i>t</i> asserts that <i>node</i> has shape <i>label</i></td>
 </tr>
 
 </table>
@@ -402,12 +402,12 @@ We define the following operations on contexts:
 
 <table>
 <tr>
-<td><i>ctx.typing</i></td><td>returns current typing in <i>ctx</i></td>
+<td><i>ctx.typing</i></td><td>current typing in <i>ctx</i></td>
 </tr>
 <tr>
 <td><i>ctx { node -> label }</i></td>
-<td>Given a context with typing <t> returns the same context 
-    where the typing is <i>addType(node,label,typing)</i></td>
+<td>Given a context with typing <i>t</i>,  
+   represents the same context where typing is <i>addType(node,label,t)</i></td>
 </tr>
 </table>
 
@@ -420,7 +420,7 @@ We define the following operations on contexts:
 
 <i>ctx |- matchNode(node, label)</i> checks if a <i>node</i> conforms
  with the shape associated with <i>label</i> in context <i>ctx</i>. 
- If it conforms, it returns <i>(t,cs,rs)</i> where 
+ If it conforms, it evaluates to <i>(t,cs,rs)</i> where 
 <i>t</i> is a typing, 
 <i>cs</i> is a set of checked triples, 
 <i>rs</i> is a set of remaining triples.
@@ -444,7 +444,7 @@ We define the following operations on contexts:
 <p>
 <i>ctx |- matchShape(triples, shape)</i> checks if a set of triples <i>triples</i> conforms
  with <i>shape</i> in context <i>ctx</i>. 
- If it conforms, it returns <i>(t,cs,rs)</i> where 
+ If it conforms, it evaluates to <i>(t,cs,rs)</i> where 
 <i>t</i> is a typing, 
 <i>cs</i> is a set of checked triples, 
 <i>rs</i> is a set of remaining triples.
@@ -659,7 +659,7 @@ hastype(x,t)
 
 <p>ValueRef handles references to shapes. There are two cases, 
   the first initial case, when the context already contains the declaration
-  that <i>x</i> has shape <i>label</i> just returns the current typing.</p>
+  that <i>x</i> has shape <i>label</i> just evaluates to the current typing.</p>
   
 <table class="rule">
 <tr>
