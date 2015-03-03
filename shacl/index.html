@@ -22,30 +22,31 @@
 	      };
 </script>
 <style>
-			.todo {
-				color: red;
-			}
-		    pre {
-				tab-size: 4;
-		    }
-			th {
-				text-align: left;
-			}
-			table.rule { background-color: #EBEBE0; }
-			table.rule td { text-align: center; }
-			td.up { border-bottom:1px solid black; }
+.todo {  color: red; }
+pre { tab-size: 4;  }
+th { text-align: left; }
+table.rule { background-color: #EBEBE0; }
+table.rule td { text-align: center; }
+td.up { border-bottom:1px solid black; }
+table.definition { border: 1px solid black;
+ border-collapse: collapse;  
+}
+table.definition td { border: 1px solid black; }
+
 .comment {
-        /* font-lock-comment-face */
-        color: #b22222;
-      }
-      .constant {
-        /* font-lock-constant-face */
-        color: #008b8b;
-      }
-      .function-name {
-        /* font-lock-function-name-face */
-        color: #0000ff;
-      }
+ /* font-lock-comment-face */
+ color: #b22222;
+}
+
+.constant {
+/* font-lock-constant-face */
+color: #008b8b;
+}
+
+.function-name {
+/* font-lock-function-name-face */
+color: #0000ff;
+}
       .keyword {
         /* font-lock-keyword-face */
         color: #a020f0;
@@ -318,44 +319,61 @@ otherwise, it is a positive antecedent. </p>
 
 <section id="RDFGraphs">
 <h2>RDF graphs</h2>
-The natural semantics matches infers a typing for a resource in an RDF graph. 
-We represent RDF graphs as sets of RDF triples, where an RDF triple is 
-<i>(subject,predicate,object)</i>
+<p>The natural semantics infers a typing for a resource in an RDF graph. 
+
+<p>We represent RDF graphs as sets of RDF triples, where an RDF triple is 
+<i>&lt;subject,predicate,object&gt;</i>
 such that 
 <i>subject</i> is a <i>URI</i> or a <i>BNode</i>, 
 <i>predicate</i> is a <i>URI</i> and 
 <i>object</i> is a <i>URI</i>, <i>BNode</i> or <i>Literal</i>.
+<p>A node is a <i>subject</i> or an <i>object</i>.
+
 For our purposes, an RDF graph has the following operations:
 
-<table>
+<table class="definition">
 <tr>
-<td>{}</td><td>Empty graph</td>
+<td>{}</td><td>Empty graph (empty set of triples)</td>
 </tr>
 <tr>
 <td>{<i>t</i>}</td>
 <td>Singleton graph with triple t</td>
 </tr>
+
+<tr>
+<td>g1 &cup; g2</td>
+<td>Union of graphs <i>g1</i> and <i>g2</i>
+</td>
+</tr>
+
+<tr>
+<td>g1 &cap; g2</td>
+<td>Intersection of graphs <i>g1</i> and <i>g2</i>
+</tr>
+
 <tr>
 <td><i>addTriple(t,ts)</i></td>
 <td>The set of triples that results of adding triple <i>t</i> to 
-    the set of triples <i>ts</i></td>
+    the set of triples <i>ts</i>
+    <p>addTriple(t,ts) = {t} &cup; ts
+</td> 
 </tr>
+
 <tr>
-<td><i>removeTriple(g)</i></td>
-<td>A pair <i>(t,g')</i> where <i>t</i> is a triple removed 
-   from the set of triples <i>g</i> and <i>g'</i> is the remaining triples</td>
+<td><i>removeTriple(ts)</i></td>
+<td>
+<p>A pair <i>(t,ts')</i> where <i>t</i> is a triple removed 
+   from the set of triples <i>g</i> and <i>g'</i> is the remaining triples
+<p>removeTriple(ts) &isin; {(t,ts')| {t} &cup; ts' = ts &and; t &notin; ts' } 
+</td>
 </tr>
-<tr>
-<td>g1 union g2</td>
-<td>Union of graphs <i>g1</i> and <i>g2</i>
-</tr>
-<tr>
-<td>g1 intersection g2</td>
-<td>Intersection of graphs <i>g1</i> and <i>g2</i>
-</tr>
+
 <tr>
 <td>g.triplesAround(node)</td>
-<td>Selects the triples that contain <i>node</i> as subject or as object in graph <i>g</i></td>
+<td>
+Selects the triples that contain <i>node</i> as subject or as object in graph <i>g</i>
+<p>g.triplesAround(node) = { &lt;s,p,o&gt; &isin; g | s = node &or; o = node }</p>
+</td>
 </tr>
 </table>
 
