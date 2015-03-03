@@ -484,7 +484,7 @@ We define the following operations on contexts:
  and there is some arc that matches it consumes it</p>
 <table class="rule">
 <tr>
-<td rowspan="2">BasicArc_unbounded2</td>
+<td rowspan="2">BasicArc_unbounded3</td>
 <td class="up">
  remove(ts) = (t,ts') &nbsp;&nbsp;&nbsp;
  ctx |- matchBasicArc(t,basicArc) = t1 &nbsp;&nbsp;&nbsp;
@@ -795,7 +795,7 @@ hasNoType(x,t)
   
 <table class="rule">
 <tr>
-<td rowspan="2">valueRef_1</td>
+<td rowspan="2">noValueRef</td>
 <td class="up">
  ctx |- matchValue(x, ValueRef(label)) = ctx.typing &nbsp;&nbsp;&nbsp; 
  notContains(ctx.typing, x, label)
