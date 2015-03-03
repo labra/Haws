@@ -197,6 +197,12 @@ Value ::= ValueSet (v1 v2 ... vN) // Matches a set of values v1...vN
         | ValueType URI           // Matches if the value belongs to the type denoted by URI
         | ValueRef Label          // Matches if the value is a node that conforms with the shape identified by Label 
 </pre>
+
+<div class="todo">
+ <p>Value should be extended to handle kinds like URI, BNode, Literal, 
+    and language tagged literals</p> 
+</div>
+
 </section>
 <section id="example">
 <h2>Example</h2>
@@ -278,8 +284,10 @@ Shape ::= Empty                   // No constraint
 
 </section>
 		
-<section id="NaturalSemantics">
+<section id="AxiomaticSemantics">
+
 <h2>Formal semantics</h2>
+
 <section id="Formalism">
 <h2>Description of the Formal Semantics</h2>
 <p>The semantics of a Shape schema consist of a 
@@ -355,8 +363,9 @@ For our purposes, an RDF graph has the following operations:
 
 <section id="Typings">
 <h2>Typings</h2>
-The semantics of SHACL consits of assigning typings to nodes in an RDF graph. 
-A typing is a map from RDF nodes (iri's or bNodes) to sets of labels in a Schema. 
+<p>The semantics of SHACL consists of assigning typings to nodes in an RDF graph. 
+A typing is a map from RDF nodes (iri's or bNodes) to sets of labels in a Schema.
+<p> 
 We define the following operations on shape typings:
 
 <table>
@@ -364,8 +373,8 @@ We define the following operations on shape typings:
 <td>{}</td><td>empty shape typing</td>
 </tr>
 <tr>
-<td><i>node -> label :: typing</i></td>
-<td>the result of associating shape <i>label</i> 
+<td><i>addType(node,label,typing)</i></td>
+<td>the result of associating type <i>label</i> 
     to <i>node</i> in <i>typing</i></td>
 </tr>
 <tr>
@@ -397,15 +406,17 @@ We define the following operations on contexts:
 </tr>
 <tr>
 <td><i>ctx { node -> label }</i></td>
-<td>returns a new context assigning typing <i>label</i> to <i>node</i> in <i>ctx</i></td>
+<td>Given a context with typing <t> returns the same context 
+    where the typing is <i>addType(node,label,typing)</i></td>
 </tr>
 </table>
 
 </section>
 </section>
+
 		 
 <section id="MatchNode">
-<h2>Match node</h2>
+<h2>matchNode</h2>
 
 <i>ctx |- matchNode(node, label)</i> checks if a <i>node</i> conforms
  with the shape associated with <i>label</i> in context <i>ctx</i>. 
@@ -429,7 +440,7 @@ We define the following operations on contexts:
 
 
 <section id="MatchShape">
-<h2>Match Shape</h2>
+<h2>matchShape</h2>
 <p>
 <i>ctx |- matchShape(triples, shape)</i> checks if a set of triples <i>triples</i> conforms
  with <i>shape</i> in context <i>ctx</i>. 
@@ -450,31 +461,48 @@ We define the following operations on contexts:
 <tr><td>ctx |- matchShape(ts,Empty) = (ctx.typing,{},ts)</td></tr>
 </table>
 
-<p>We distinguish 5 cases for basic arc depending on the cardinality. </p>
+<p>We distinguish 6 cases for basic arcs depending on the cardinality. </p>
 
 <ul>
+
 <li>
 <p>When the cardinality is {0,unbounded} 
- it matches any set of triples:</p>
+ and there is no arc that matches it matches the set of triples without 
+ consuming any triple</p>
 <table class="rule">
 <tr>
-<td rowspan="2">BasicArc_unbounded1</td>
+<td rowspan="2">BasicArc_unbounded2</td>
 <td class="up">
-  &nbsp;
+ ctx |- noMatchAny(ts,basicArc) &nbsp;&nbsp;&nbsp;
 </td>
 </tr>
 <tr><td>ctx |- matchShape(ts,basicArc {0,unbounded}) = (ctx.typing,{},ts)</td></tr>
 </table>
 
 <li>
-<p>When the cardinality is <i>{m,unbounded}</i> for <i>m > 0</i> it matches if
- there is one triple that matches and if the rest of triples matches 
- with a cardinality of <i>{m - 1, unbounded}</i></p>
-<p>Notice that it only matches if there are at least one triple</p>
-
+<p>When the cardinality is {0,unbounded} 
+ and there is some arc that matches it consumes it</p>
 <table class="rule">
 <tr>
 <td rowspan="2">BasicArc_unbounded2</td>
+<td class="up">
+ remove(ts) = (t,ts') &nbsp;&nbsp;&nbsp;
+ ctx |- matchBasicArc(t,basicArc) = t1 &nbsp;&nbsp;&nbsp;
+ ctx |- matchBasicArc(ts',basicArc {0,unbounded}) = (t2,cs,rs) 
+</td>
+</tr>
+<tr><td>ctx |- matchShape(ts,basicArc {0,unbounded}) = (combineTypings(t1,t2),addTriple(t,cs),rs)</td></tr>
+</table>
+
+<li>
+<p>When the cardinality is <i>{m,unbounded}</i> for <i>m > 0</i> it matches if
+ there is one triple that matches and if the rest of triples matches 
+ with a cardinality of <i>{m - 1, unbounded}</i></p>
+<p>Notice that it only matches if there is at least one triple</p>
+
+<table class="rule">
+<tr>
+<td rowspan="2">BasicArc_unbounded3</td>
 <td class="up">
 m > 0 &nbsp;&nbsp;&nbsp;
 removeTriple(ts) = (t,ts') &nbsp;&nbsp;&nbsp;
@@ -482,7 +510,7 @@ ctx |- matchArc(t,basicArc) = t1 &nbsp;&nbsp;&nbsp;
 ctx |- matchShape(ts',basicArc {m - 1,unbounded}) = (t2,cs,rs)
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, basicArc {m,unbounded}) = (combineTypings(t1,t2),t:cs,rs)</td></tr>
+<tr><td>ctx |- matchShape(ts, basicArc {m,unbounded}) = (combineTypings(t1,t2),addTriple(t,cs),rs)</td></tr>
 </table>
 
 <li>
@@ -496,10 +524,10 @@ is one triple that matches and the rest of triples matches with a cardinality of
 <td rowspan="2">BasicArc_bounded1</td>
 <td class="up">
 n >= 0 &nbsp;&nbsp;&nbsp;
-not (ctx |- matchArcAny(ts,p,v)) 
+ctx |- noMatchAny(ts,basicArc)) 
 </td>
 </tr>
-<tr><td>ctx |- matchShape(ts, BasicArc {0, n}) = (ctx.typing,{},ts)</td></tr>
+<tr><td>ctx |- matchShape(ts, basicArc {0, n}) = (ctx.typing,{},ts)</td></tr>
 </table>
 
 <li> 
@@ -510,7 +538,7 @@ not (ctx |- matchArcAny(ts,p,v))
 n > 0 &nbsp;&nbsp;&nbsp;
 removeTriple(ts) = (t,ts') &nbsp;&nbsp;&nbsp;
 matchArc(t,basicArc) = t1  &nbsp;&nbsp;&nbsp;
-ctx |- matchShape(ts',basicArc {0, n - 1}) = (t2,cs,rs)
+ctx |- matchShape(ts', basicArc {0, n - 1}) = (t2,cs,rs)
 </td>
 </tr>
 <tr><td>ctx |- matchShape(ts, basicArc {0, n}) = (combineTypings(t1,t2), addTriple(t,cs), rs)</td></tr>
@@ -574,7 +602,7 @@ ctx |- matchShape(ts, e2) = (t, cs, rs)
 </section>
 
 <section id="MatchBasicArc">
-<h2>Match BasicArc</h2>
+<h2>matchBasicArc</h2>
 <p>This section covers how to match a basic Arc:
 <i>ctx|-matchBasicArc(triple,basicArc)</i>. 
 <p> There are two cases: direct arcs match the value with the object of the triple 
@@ -603,23 +631,27 @@ ctx |- matchValue(s,v) = t
 </section>
 
 <section id="MatchValue">
-<h2>Match value</h2>
+<h2>matchValue</h2>
 
 <table class="rule">
 <tr>
 <td rowspan="2">valueSet</td>
 <td class="up">
-x in set
+x &in; set
 </td>
 </tr>
 <tr><td>ctx |- matchValue(x, ValueSet(set)) = ctx.typing</td></tr>
 </table>
 
+<div class="todo">
+<p><i>noValueType</i> needs more work to handle different possibilities</p>
+</div>
+
 <table class="rule">
 <tr>
-<td rowspan="2">valueObjectType</td>
+<td rowspan="2">valueType</td>
 <td class="up">
-x hastype t
+hastype(x,t)
 </td>
 </tr>
 <tr><td>ctx |- matchValue(x, ValueType(t)) = ctx.typing</td></tr>
@@ -655,41 +687,126 @@ ctx |- matchNode(x,v) = (t,_,_)
 
 </section>
 
-<section id="MatchArcAny">
-<h2>MatchArcAny</h2>
-<p><i>matchArcAny</i> takes a set of triples and a basic arc and checks if there is some triple
- in that set that matches with the basic arc.
- The result is a boolean</p>
+<section id="noMatchAny">
+<h2>noMatchAny</h2>
+<p><i>noMatchArcAny</i> takes a set of triples and a basic arc and checks that there is no
+ triple that matches the basic arc
+</p>
  
 <p>It has two possibilities. 
-Either it matches the first triple in the set (<i>matchArc_1</i>)
- or it matches any of the rest of triples in the set (<i>matchArc_2</i>)</p>
 
 <table class="rule">
 <tr>
-<td rowspan="2">matchArcAny_1</td>
+<td rowspan="2">noMatchAny_1</td>
 <td class="up">
-removeTriple(ts) = (t,ts') &nbsp;&nbsp;&nbsp; 
-ctx |- matchBasicArc(t,basicArc) = (_,_,_)
+ &nbsp; 
 </td>
 </tr>
-<tr><td>ctx |- matchArcAny(ts, basicArc)</td></tr>
+<tr><td>ctx |- noMatchAny({}, basicArc)</td></tr>
 </table>
  
 <table class="rule">
 <tr>
-<td rowspan="2">matchArcAny_2</td>
+<td rowspan="2">noMatchAny_2</td>
 <td class="up">
 removeTriple(ts) = (t,ts') &nbsp;&nbsp;&nbsp;
-ctx |- matchArcAny(ts',basicArc)
+ctx |- noMatchBasicArc(t,basicArc) &nbsp;&nbsp;&nbsp;
+ctx |- noMatchAny(ts',basicArc)
 </td>
 </tr>
-<tr><td>ctx |- matchArcAny(ts, basicArc)</td></tr>
+<tr><td>ctx |- noMatchAny(ts, basicArc)</td></tr>
 </table>
 
-</section> <!-- matchArcAny -->
+</section> <!-- noMatchAny -->
 
-</section>
+
+<section id="noMatchBasicArc">
+<h2>noMatchBasicArc</h2>
+<p><i>noMatchBasicArc</i> 
+</p>
+
+<p>If the predicates are different, then it succeeds
+
+<table class="rule">
+<tr>
+<td rowspan="2">noMatchBasicArc_1</td>
+<td class="up">
+p &ne; p'
+</td>
+</tr>
+<tr><td>ctx |- noMatchBasicArc(&lt;s,p,o&gt;, Arc p' v)</td></tr>
+</table>
+
+<p>If the predicates are the same it succeeds if the value doesn't match. There are two cases 
+ depending on direct/inverse arcs 
+ 
+<table class="rule">
+<tr>
+<td rowspan="2">noMatchSubjectArc</td>
+<td class="up">
+ctx |- noMatchValue(o,v)
+</td>
+</tr>
+<tr><td>ctx |- noMatchBasicArc(&lt;s,p,o&gt;, Arc p v)</td></tr>
+</table>
+
+<table class="rule">
+<tr>
+<td rowspan="2">noMatchObjectArc</td>
+<td class="up">
+ctx |- noMatchValue(s,v)
+</td>
+</tr>
+<tr><td>ctx |- noMatchBasicArc(&lt;s,p,o&gt;, InvArc p v)</td></tr>
+</table>
+ 
+</section> <!-- noMatchBasicArc -->
+
+<section id="noMatchValue">
+
+<h2>noMatchValue</h2>
+<p>It succeeds if the value doesn't match with the node.
+
+<table class="rule">
+<tr>
+<td rowspan="2">noValueSet</td>
+<td class="up">
+x &notin; set
+</td>
+</tr>
+<tr><td>ctx |- matchValue(x, ValueSet(set))</td></tr>
+</table>
+
+<div class="todo">
+<p><i>noValueType</i> needs more work to handle different possibilities</p>
+</div>
+<table class="rule">
+<tr>
+<td rowspan="2">noValueType</td>
+<td class="up">
+hasNoType(x,t)
+</td>
+</tr>
+<tr><td>ctx |- matchValue(x, ValueType(t))</td></tr>
+</table>
+
+<p><i>noValueRef</i> succeeds if the the system can not 
+  determine that the node <i>x</i> has shape <i>label</i>.
+  
+<table class="rule">
+<tr>
+<td rowspan="2">valueRef_1</td>
+<td class="up">
+ ctx |- matchValue(x, ValueRef(label)) = ctx.typing &nbsp;&nbsp;&nbsp; 
+ notContains(ctx.typing, x, label)
+</td>
+</tr>
+<tr><td>ctx |- noMatchValue(x, ValueRef(label))</td></tr>
+</table>
+
+</section> <!-- noMatchValue -->
+
+</section> <!-- AxiomaticSemantics -->
 		
 <section id="Extension">
 <h2>Extended features</h2>
